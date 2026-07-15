@@ -926,8 +926,14 @@ app.post('/api/registrar-gerente', (req, res) => {
   const data = carregar();
 
   const precisaEstarLogado = data.gerentes.length > 0;
-  if (precisaEstarLogado && !(req.session && req.session.gerenteId)) {
-    return res.status(401).json({ erro: 'Faça login para cadastrar outro RP' });
+  if (precisaEstarLogado) {
+    if (!(req.session && req.session.gerenteId)) {
+      return res.status(401).json({ erro: 'Faça login para cadastrar outro RP' });
+    }
+    const quemPede = data.gerentes.find(g => g.id === req.session.gerenteId);
+    if (!quemPede || quemPede.role !== 'admin') {
+      return res.status(403).json({ erro: 'Só o administrador pode cadastrar novos RPs' });
+    }
   }
 
   const jaExiste = data.gerentes.some(g =>

@@ -85,6 +85,19 @@
 
   .msg-rp { margin-top: 8px; font-size: 13px; }
 
+  .novo-rp-card {
+    margin-bottom: 20px;
+  }
+  .novo-rp-form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin-top: 10px;
+  }
+  .novo-rp-form input { flex: 1 1 160px; margin-bottom: 0; }
+  .novo-rp-form button { width: auto; padding: 13px 20px; }
+
   .oculto { display: none; }
 </style>
 </head>
@@ -111,6 +124,17 @@
   <div class="topo">
     <h1 class="titulo-fest">👥 Gerenciar RPs</h1>
     <p>Troque senha, mude o papel ou exclua uma conta, sem precisar de e-mail.</p>
+  </div>
+
+  <div class="card novo-rp-card">
+    <span class="rotulo" style="text-transform:uppercase; font-size:12px; color:var(--cinza-400); letter-spacing:1px;">+ Cadastrar novo RP</span>
+    <div class="novo-rp-form">
+      <input type="text" id="novoRpUsuario" placeholder="Usuário">
+      <input type="email" id="novoRpEmail" placeholder="E-mail">
+      <input type="password" id="novoRpSenha" placeholder="Senha (mín. 6 caracteres)">
+      <button onclick="criarRp()">Criar RP</button>
+    </div>
+    <div class="msg-rp" id="msgNovoRp"></div>
   </div>
 
   <div id="listaGerentes"></div>
@@ -162,6 +186,29 @@ async function carregar() {
       <div class="msg-rp" id="msg-${g.id}"></div>
     </div>
   `).join('');
+}
+
+async function criarRp() {
+  const usuario = document.getElementById('novoRpUsuario').value.trim();
+  const email = document.getElementById('novoRpEmail').value.trim();
+  const senha = document.getElementById('novoRpSenha').value;
+  const msg = document.getElementById('msgNovoRp');
+
+  const res = await fetch('/api/registrar-gerente', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ usuario, email, senha })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    msg.innerHTML = `<span class="ok" style="padding:6px 10px; border-radius:8px;">✅ RP "${usuario}" criado</span>`;
+    document.getElementById('novoRpUsuario').value = '';
+    document.getElementById('novoRpEmail').value = '';
+    document.getElementById('novoRpSenha').value = '';
+    carregar();
+  } else {
+    msg.innerHTML = `<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ ${data.erro}</span>`;
+  }
 }
 
 function mostrarFormSenha(id) {

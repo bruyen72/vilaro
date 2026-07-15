@@ -73,7 +73,6 @@
 
   <div class="link-alt">
     <a onclick="location.href='/esqueci-senha.html'" id="linkEsqueci" class="oculto">Esqueci minha senha</a>
-    <a onclick="location.href='/login.html?cadastro=1'" id="linkCadastro" class="oculto">Cadastrar novo RP</a>
   </div>
 </div>
 </div>
@@ -103,7 +102,6 @@ async function iniciar() {
     subtitulo.textContent = 'Entre com sua conta de RP';
     document.getElementById('formLogin').classList.remove('oculto');
     document.getElementById('linkEsqueci').classList.remove('oculto');
-    document.getElementById('linkCadastro').classList.remove('oculto');
   } else {
     subtitulo.textContent = 'Primeiro acesso — crie a conta do RP';
     document.getElementById('formRegistro').classList.remove('oculto');
