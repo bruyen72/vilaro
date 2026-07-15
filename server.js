@@ -795,6 +795,87 @@ app.get('/api/lista/:grupo_id/exportar', exigirLogin, async (req, res) => {
   res.end();
 });
 
+// ---------- RELATÓRIO COMPLETO DO EVENTO EM EXCEL (admin, todos os RPs juntos) ----------
+app.get('/api/eventos/:id/relatorio', exigirAdmin, async (req, res) => {
+  const data = garantirGrupos(garantirNumeros(carregar()));
+  const evento = data.eventos.find(e => e.id == req.params.id);
+  if (!evento) return res.status(404).json({ erro: 'Evento não encontrado' });
+
+  const gruposEvento = data.grupos.filter(g => g.evento_id === evento.id);
+
+  const workbook = new ExcelJS.Workbook();
+
+  const resumo = workbook.addWorksheet('Resumo por RP');
+  resumo.columns = [
+    { header: 'RP', key: 'rp_nome', width: 24 },
+    { header: 'Na lista', key: 'inscritos', width: 12 },
+    { header: 'Pagos', key: 'pagos', width: 12 },
+    { header: 'Valor arrecadado', key: 'total_ganho', width: 18 }
+  ];
+  resumo.getRow(1).font = { bold: true };
+
+  let totalInscritosGeral = 0;
+  let totalPagosGeral = 0;
+  let totalGanhoGeral = 0;
+
+  gruposEvento.forEach(g => {
+    const doGrupo = data.inscritos.filter(i => i.grupo_id === g.id);
+    const pagos = doGrupo.filter(i => i.pago);
+    const totalGanho = pagos.reduce((soma, i) => soma + (Number(i.valor_pago) || 0), 0);
+    resumo.addRow({ rp_nome: g.rp_nome, inscritos: doGrupo.length, pagos: pagos.length, total_ganho: totalGanho });
+    totalInscritosGeral += doGrupo.length;
+    totalPagosGeral += pagos.length;
+    totalGanhoGeral += totalGanho;
+  });
+
+  const linhaTotal = resumo.addRow({ rp_nome: 'TOTAL', inscritos: totalInscritosGeral, pagos: totalPagosGeral, total_ganho: totalGanhoGeral });
+  linhaTotal.font = { bold: true };
+
+  const detalhado = workbook.addWorksheet('Todos os convidados');
+  detalhado.columns = [
+    { header: 'RP', key: 'rp_nome', width: 20 },
+    { header: 'Número', key: 'numero', width: 10 },
+    { header: 'Nome completo', key: 'nome_completo', width: 30 },
+    { header: 'WhatsApp', key: 'whatsapp', width: 18 },
+    { header: 'E-mail', key: 'email', width: 28 },
+    { header: 'Entrou em', key: 'criado_em', width: 20 },
+    { header: 'Pago', key: 'pago', width: 10 },
+    { header: 'Valor pago', key: 'valor_pago', width: 14 }
+  ];
+  detalhado.getRow(1).font = { bold: true };
+
+  const corVerde = 'FFD9EAD3';
+  const corVermelha = 'FFF4CCCC';
+
+  gruposEvento.forEach(g => {
+    data.inscritos
+      .filter(i => i.grupo_id === g.id)
+      .sort((a, b) => a.numero - b.numero)
+      .forEach(i => {
+        const linha = detalhado.addRow({
+          rp_nome: g.rp_nome,
+          numero: i.numero,
+          nome_completo: i.nome_completo,
+          whatsapp: i.whatsapp,
+          email: i.email || '',
+          criado_em: i.criado_em,
+          pago: i.pago ? 'Sim' : 'Não',
+          valor_pago: i.valor_pago || ''
+        });
+        const cor = i.pago ? corVerde : corVermelha;
+        linha.eachCell(cell => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: cor } };
+        });
+      });
+  });
+
+  const nomeArquivo = `relatorio-${evento.nome.replace(/[^a-z0-9]+/gi, '-')}.xlsx`;
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${nomeArquivo}"`);
+  await workbook.xlsx.write(res);
+  res.end();
+});
+
 // ---------- CAIXA: ESTATÍSTICAS DE CHECK-IN DE UM EVENTO (pra gráfico de acompanhamento) ----------
 // RP só vê o próprio número, nunca o de outro RP. Só o admin vê todo mundo junto.
 app.get('/api/caixa-stats/:evento_id', exigirLogin, (req, res) => {

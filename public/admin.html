@@ -437,6 +437,7 @@ async function carregar() {
           ${ev.ativo
             ? `<button class="btn-secundario" onclick="fechar(${ev.id})">Encerrar lista agora</button>`
             : `<button class="btn-secundario" onclick="reabrir(${ev.id})">Reabrir lista</button>`}
+          <button class="btn-secundario" onclick="window.location.href='/api/eventos/${ev.id}/relatorio'">Baixar relatório (Excel)</button>
           <button class="btn-excluir" onclick="excluirEvento(${ev.id}, '${ev.nome.replace(/'/g, "\\'")}')">Excluir evento</button>
         </div>
 
