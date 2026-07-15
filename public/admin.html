@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .pagina { padding: 28px; max-width: 720px; margin: 0 auto; }
+  .topo {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .topo h1 {
+    font-size: 26px;
+    margin: 0 0 4px;
+  }
+  .topo p { color: var(--cinza-400); font-size: 13px; margin: 0; }
+
+  .btn-novo-evento { width: auto; padding: 13px 20px; white-space: nowrap; }
+  .oculto { display: none; }
+
+  .card { margin-bottom: 18px; }
+  .linha-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .linha-topo strong { font-size: 17px; }
+  .contagem {
+    font-size: 12px;
+    color: var(--cinza-300);
+    background: var(--preto2);
+    border: 1px solid var(--cinza-700);
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+
+  /* ---- Card "novo evento" ---- */
+  .form-novo-evento {
+    border: 1px solid rgba(255,255,255,0.16);
+    box-shadow: var(--sombra-glow), 0 24px 50px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+  .linha-dupla {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .form-novo-evento .linha-acoes { margin-top: 18px; }
+  .ajuda-horario {
+    font-size: 12px;
+    color: var(--cinza-400);
+    margin: 8px 0 0;
+    line-height: 1.4;
+  }
+  .sublabel {
+    display: block;
+    font-size: 10px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .form-novo-evento .linha-acoes button:first-child { flex: 1; }
+
+  /* ---- Lista de eventos: itens recolhíveis ---- */
+  .evento-item {
+    border-radius: 20px;
+    margin-bottom: 14px;
+    background: linear-gradient(160deg, rgba(28,28,32,0.92), rgba(10,10,12,0.94));
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .evento-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    user-select: none;
+  }
+  .evento-summary::-webkit-details-marker { display: none; }
+  .evento-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--preto2);
+    border: 1px solid var(--cinza-700);
+    flex-shrink: 0;
+  }
+  .evento-summary-info { flex: 1 1 auto; min-width: 0; }
+  .evento-summary-nome {
+    font-size: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .evento-summary-sub {
+    font-size: 12px;
+    color: var(--cinza-400);
+    margin-top: 2px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .chevron {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: var(--cinza-400);
+    transition: transform .25s ease;
+  }
+  .evento-item[open] .chevron { transform: rotate(180deg); }
+  .evento-corpo {
+    padding: 4px 20px 22px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .secao-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin: 22px 0 4px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--cinza-700);
+  }
+  .secao-titulo:first-child { margin-top: 18px; }
+
+  .grupo-destaque {
+    margin-top: 10px;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(236,238,242,0.18);
+    background: linear-gradient(160deg, rgba(236,238,242,0.05), rgba(236,238,242,0.015));
+  }
+
+  label {
+    font-size: 12px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  .preview {
+    width: 100%;
+    height: 150px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--preto2);
+    border-radius: 12px;
+    margin-top: 10px;
+    border: 1px solid var(--cinza-700);
+  }
+
+  input[type="file"] {
+    padding: 10px;
+    font-size: 13px;
+    color: var(--cinza-300);
+  }
+
+  .btn-secundario {
+    background: var(--cinza-800);
+    color: var(--branco);
+    border: 1px solid var(--cinza-600);
+    box-shadow: none;
+  }
+
+  .btn-excluir {
+    width: auto;
+    padding: 12px 18px;
+    background: none;
+    color: var(--erro-fg);
+    border: 1px solid rgba(255,155,155,0.3);
+    box-shadow: none;
+  }
+  .btn-excluir::before { display: none; }
+  .btn-excluir:hover { background: rgba(255,155,155,0.1); filter: none; transform: none; }
+
+  .msg { margin-top: 10px; font-size: 13px; padding: 8px; text-align: left; }
+  .link-form {
+    margin-top: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: var(--prata);
+    text-decoration: none;
+    padding: 13px;
+    border-radius: 10px;
+    border: 1px solid var(--cinza-600);
+    background: var(--preto2);
+    transition: color .2s ease, border-color .2s ease, background .2s ease, transform .15s ease;
+  }
+  .link-form:hover {
+    color: var(--branco);
+    border-color: var(--prata);
+    background: var(--cinza-800);
+    transform: translateY(-1px);
+  }
+  .link-form svg { width: 16px; height: 16px; transition: transform .2s ease; }
+  .link-form:hover svg { transform: translateX(3px); }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-left: 8px;
+  }
+  .badge.aberto { background: var(--ok-bg); color: var(--ok-fg); border: 1px solid rgba(126,230,172,0.3); }
+  .badge.fechado { background: var(--erro-bg); color: var(--erro-fg); border: 1px solid rgba(255,155,155,0.3); }
+
+  .linha-acoes { display: flex; gap: 10px; margin-top: 14px; }
+  .linha-acoes button { width: auto; padding: 12px 18px; }
+
+  .meu-grupo-stats {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .meu-grupo-stats span {
+    font-size: 12px;
+    color: var(--cinza-300);
+    background: var(--preto2);
+    border: 1px solid var(--cinza-700);
+    padding: 5px 10px;
+    border-radius: 100px;
+  }
+  .linha-link { display: flex; gap: 8px; }
+  .linha-link input { flex: 1 1 auto; min-width: 0; margin-bottom: 0; font-size: 12px; }
+  .linha-link button { flex: 0 0 auto; width: auto; white-space: nowrap; }
+  .linha-criar-grupo { display: flex; gap: 8px; align-items: center; }
+  .linha-criar-grupo input { flex: 1 1 auto; min-width: 0; margin-bottom: 0; }
+  .linha-criar-grupo button { flex: 0 0 auto; width: auto; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+    <button class="navbar-toggle" id="navToggle" aria-label="Abrir menu" onclick="this.classList.toggle('aberto'); document.getElementById('navMenu').classList.toggle('aberto')">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="navbar-menu" id="navMenu">
+      <a href="/admin.html" class="navbar-link ativo">Eventos</a>
+      <a href="/dashboard.html" class="navbar-link">Lista de convidados</a>
+      <a href="/caixa.html" class="navbar-link">Caixa</a>
+      <a href="/admin.html?novo=1" class="navbar-link">+ Novo evento</a>
+      <a href="/login.html?cadastro=1" class="navbar-link">+ Novo RP</a>
+      <a href="/gerenciar-rps.html" class="navbar-link">Gerenciar RPs</a>
+      <a href="/conta.html" class="navbar-link">Minha conta</a>
+      <button class="navbar-sair" onclick="sair()">Sair</button>
+    </div>
+  </div>
+</nav>
+
+<div class="pagina">
+  <div class="topo">
+    <div>
+      <h1 class="titulo-fest">⚙ Admin — Eventos</h1>
+      <p>Clique num evento pra abrir e mexer. Cada RP cria o próprio grupo com o próprio preço.</p>
+    </div>
+    <button class="btn-novo-evento" onclick="abrirFormNovoEvento()">+ Novo evento</button>
+  </div>
+
+  <div class="card form-novo-evento oculto" id="formNovoEvento">
+    <label style="margin-top:0;">Nome do evento</label>
+    <input type="text" id="novoNome" placeholder="ex: Festa Black & Silver">
+
+    <label>Valor de referência (R$)</label>
+    <input type="number" step="0.01" id="novoValor" placeholder="ex: 60">
+
+    <label>Descrição (opcional, aparece no banner)</label>
+    <textarea id="novoDesc" rows="2" placeholder="ex: A noite mais estilosa do ano"></textarea>
+
+    <label>Início (opcional)</label>
+    <div class="linha-dupla">
+      <div>
+        <span class="sublabel">Data</span>
+        <input type="date" id="novoInicioData">
+      </div>
+      <div>
+        <span class="sublabel">Hora</span>
+        <input type="time" id="novoInicioHora">
+      </div>
+    </div>
+
+    <label>Fim (opcional)</label>
+    <div class="linha-dupla">
+      <div>
+        <span class="sublabel">Data</span>
+        <input type="date" id="novoFimData">
+      </div>
+      <div>
+        <span class="sublabel">Hora</span>
+        <input type="time" id="novoFimHora">
+      </div>
+    </div>
+    <p class="ajuda-horario">Se deixar o fim em branco, a lista só encerra quando você clicar em "Encerrar lista agora".</p>
+
+    <div class="linha-acoes">
+      <button onclick="criarEvento()">Criar evento</button>
+      <button class="btn-secundario" onclick="fecharFormNovoEvento()">Cancelar</button>
+    </div>
+    <div class="msg" id="msgNovoEvento"></div>
+  </div>
+
+  <div id="lista"></div>
+</div>
+
+<script>
+function paraInputData(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function paraInputHora(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function combinarDataHora(data, hora) {
+  if (!data) return '';
+  return `${data}T${hora || '00:00'}`;
+}
+
+async function carregar() {
+  const res = await fetch('/api/eventos/todos');
+  if (res.status === 401) return window.location.href = '/login.html';
+  const eventos = await res.json();
+
+  const resGrupos = await fetch('/api/grupos/meus');
+  const meusGrupos = resGrupos.ok ? await resGrupos.json() : [];
+
+  const container = document.getElementById('lista');
+  const abertos = Array.from(container.querySelectorAll('.evento-item[open]')).map(d => d.id);
+
+  if (eventos.length === 0) {
+    container.innerHTML = '<div class="vazio" style="text-align:center; color:var(--cinza-400); padding:40px; font-size:14px;">Nenhum evento ainda. Clique em "+ Novo evento" pra criar o primeiro.</div>';
+    return;
+  }
+
+  container.innerHTML = eventos.map(ev => {
+    const meuGrupo = meusGrupos.find(g => g.evento_id === ev.id);
+    return `
+    <details class="evento-item" id="card-${ev.id}">
+      <summary class="evento-summary">
+        <div class="evento-thumb" style="background-image:url('${ev.banner_url || ''}')"></div>
+        <div class="evento-summary-info">
+          <div class="evento-summary-nome">${ev.nome}</div>
+          <div class="evento-summary-sub">
+            ${ev.ativo ? '<span class="badge aberto">Aberta</span>' : '<span class="badge fechado">Encerrada</span>'}
+            <span class="contagem">${ev.inscritos} na lista</span>
+            ${meuGrupo ? `<span class="contagem">seu grupo: R$ ${meuGrupo.valor.toFixed(2)}</span>` : ''}
+          </div>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </summary>
+
+      <div class="evento-corpo">
+        <div class="secao-titulo">🖼 Banner</div>
+        <div class="preview" style="background-image:url('${ev.banner_url || ''}')" id="preview-${ev.id}"></div>
+        <input type="file" accept="image/*" id="imagem-${ev.id}">
+        <div class="linha-acoes" style="margin-top:10px;">
+          <button class="btn-secundario" onclick="enviarImagem(${ev.id})">Enviar imagem</button>
+          ${ev.banner_url ? `<button class="btn-secundario" onclick="removerBanner(${ev.id})">Remover banner</button>` : ''}
+        </div>
+
+        <div class="secao-titulo">⚙ Configurações do evento</div>
+        <label style="margin-top:0;">Nome do evento</label>
+        <input type="text" id="nome-${ev.id}" value="${ev.nome}">
+
+        <label>Descrição (aparece embaixo do nome no banner)</label>
+        <textarea id="desc-${ev.id}" rows="2">${ev.descricao || ''}</textarea>
+
+        <label style="margin-top:16px;">Início (opcional)</label>
+        <div class="linha-dupla">
+          <div>
+            <span class="sublabel">Data</span>
+            <input type="date" id="inicioData-${ev.id}" value="${paraInputData(ev.data_inicio)}">
+          </div>
+          <div>
+            <span class="sublabel">Hora</span>
+            <input type="time" id="inicioHora-${ev.id}" value="${paraInputHora(ev.data_inicio)}">
+          </div>
+        </div>
+
+        <label>Fim (opcional)</label>
+        <div class="linha-dupla">
+          <div>
+            <span class="sublabel">Data</span>
+            <input type="date" id="fimData-${ev.id}" value="${paraInputData(ev.data_fim)}">
+          </div>
+          <div>
+            <span class="sublabel">Hora</span>
+            <input type="time" id="fimHora-${ev.id}" value="${paraInputHora(ev.data_fim)}">
+          </div>
+        </div>
+        <p class="ajuda-horario">Se deixar o fim em branco, a lista só encerra quando você clicar em "Encerrar lista agora".</p>
+
+        <button onclick="salvar(${ev.id})">Salvar alterações</button>
+
+        <div class="linha-acoes">
+          ${ev.ativo
+            ? `<button class="btn-secundario" onclick="fechar(${ev.id})">Encerrar lista agora</button>`
+            : `<button class="btn-secundario" onclick="reabrir(${ev.id})">Reabrir lista</button>`}
+          <button class="btn-excluir" onclick="excluirEvento(${ev.id}, '${ev.nome.replace(/'/g, "\\'")}')">Excluir evento</button>
+        </div>
+
+        <div class="msg" id="msg-${ev.id}"></div>
+
+        <div class="secao-titulo">✦ Meu grupo (RP)</div>
+        <div class="grupo-destaque">
+          ${meuGrupo ? `
+            <div class="meu-grupo-stats">
+              <span>${meuGrupo.inscritos} na lista</span>
+              <span>${meuGrupo.pagos} pagos</span>
+              <span style="color:var(--ok-fg); font-weight:700;">R$ ${meuGrupo.total_ganho.toFixed(2)} confirmado</span>
+            </div>
+            <label style="margin-top:0;">Valor do meu grupo (R$)</label>
+            <div class="linha-criar-grupo">
+              <input type="number" step="0.01" id="valorGrupo-${ev.id}" value="${meuGrupo.valor}">
+              <button class="btn-secundario" onclick="salvarValorGrupo(${meuGrupo.id}, ${ev.id})">Salvar valor</button>
+            </div>
+            <label>Link da minha lista (manda pro cliente)</label>
+            <div class="linha-link">
+              <input type="text" readonly id="linkGrupo-${ev.id}" value="${window.location.origin}/grupo.html?slug=${meuGrupo.slug}">
+              <button class="btn-secundario" onclick="copiarLink(${ev.id})">Copiar</button>
+            </div>
+          ` : `
+            <label style="margin-top:0;">Valor do meu grupo (R$)</label>
+            <div class="linha-criar-grupo">
+              <input type="number" step="0.01" id="valorNovoGrupo-${ev.id}" placeholder="ex: 60">
+              <button class="btn-secundario" onclick="criarGrupo(${ev.id})">Criar meu grupo</button>
+            </div>
+          `}
+          <div class="msg" id="msgGrupo-${ev.id}"></div>
+        </div>
+
+        <a class="link-form" href="/index.html?evento=${ev.id}" target="_blank">
+          Ver página desse evento
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </details>
+  `;
+  }).join('');
+
+  abertos.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.open = true;
+  });
+}
+
+function abrirFormNovoEvento() {
+  document.getElementById('formNovoEvento').classList.remove('oculto');
+}
+
+function fecharFormNovoEvento() {
+  document.getElementById('formNovoEvento').classList.add('oculto');
+  document.getElementById('novoNome').value = '';
+  document.getElementById('novoValor').value = '';
+  document.getElementById('novoDesc').value = '';
+  document.getElementById('novoInicioData').value = '';
+  document.getElementById('novoInicioHora').value = '';
+  document.getElementById('novoFimData').value = '';
+  document.getElementById('novoFimHora').value = '';
+  document.getElementById('msgNovoEvento').innerHTML = '';
+}
+
+async function criarEvento() {
+  const nome = document.getElementById('novoNome').value.trim();
+  const valor = document.getElementById('novoValor').value;
+  const descricao = document.getElementById('novoDesc').value.trim();
+  const data_inicio = combinarDataHora(document.getElementById('novoInicioData').value, document.getElementById('novoInicioHora').value);
+  const data_fim = combinarDataHora(document.getElementById('novoFimData').value, document.getElementById('novoFimHora').value);
+  const msg = document.getElementById('msgNovoEvento');
+
+  if (!nome || !valor) {
+    msg.innerHTML = '<div class="msg erro">Preencha nome e valor</div>';
+    return;
+  }
+
+  const res = await fetch('/api/eventos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome, valor, descricao, data_inicio, data_fim })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    fecharFormNovoEvento();
+    carregar();
+  } else {
+    msg.innerHTML = `<div class="msg erro">❌ ${data.erro}</div>`;
+  }
+}
+
+async function criarGrupo(eventoId) {
+  const valor = document.getElementById('valorNovoGrupo-' + eventoId).value;
+  const msg = document.getElementById('msgGrupo-' + eventoId);
+  if (!valor) {
+    msg.innerHTML = '<span class="erro" style="padding:6px 10px; border-radius:8px;">Informe o valor do seu grupo</span>';
+    return;
+  }
+  const res = await fetch('/api/grupos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ evento_id: eventoId, valor })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    carregar();
+  } else {
+    msg.innerHTML = `<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ ${data.erro}</span>`;
+  }
+}
+
+async function salvarValorGrupo(grupoId, eventoId) {
+  const valor = document.getElementById('valorGrupo-' + eventoId).value;
+  const msg = document.getElementById('msgGrupo-' + eventoId);
+  const res = await fetch('/api/grupos/' + grupoId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ valor })
+  });
+  if (res.ok) {
+    msg.innerHTML = '<span class="ok" style="padding:6px 10px; border-radius:8px;">✅ Valor atualizado</span>';
+  } else {
+    msg.innerHTML = '<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ Erro ao salvar</span>';
+  }
+}
+
+function copiarLink(eventoId) {
+  const input = document.getElementById('linkGrupo-' + eventoId);
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value);
+  const msg = document.getElementById('msgGrupo-' + eventoId);
+  msg.innerHTML = '<span class="ok" style="padding:6px 10px; border-radius:8px;">✅ Link copiado</span>';
+}
+
+async function sair() {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+}
+
+async function fechar(id) {
+  await fetch('/api/eventos/' + id + '/fechar', { method: 'POST' });
+  carregar();
+}
+
+async function reabrir(id) {
+  await fetch('/api/eventos/' + id + '/reabrir', { method: 'POST' });
+  carregar();
+}
+
+async function salvar(id) {
+  const nome = document.getElementById('nome-' + id).value;
+  const descricao = document.getElementById('desc-' + id).value;
+  const data_inicio = combinarDataHora(document.getElementById('inicioData-' + id).value, document.getElementById('inicioHora-' + id).value);
+  const data_fim = combinarDataHora(document.getElementById('fimData-' + id).value, document.getElementById('fimHora-' + id).value);
+
+  const res = await fetch('/api/eventos/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome, descricao, data_inicio, data_fim })
+  });
+  const data = await res.json();
+  const msg = document.getElementById('msg-' + id);
+  if (res.ok) {
+    msg.innerHTML = '<span class="ok" style="padding:6px 10px; border-radius:8px;">✅ Salvo</span>';
+    carregar();
+  } else {
+    msg.innerHTML = `<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ ${data.erro || 'Erro ao salvar'}</span>`;
+  }
+}
+
+async function removerBanner(id) {
+  const msg = document.getElementById('msg-' + id);
+  const res = await fetch('/api/eventos/' + id + '/banner', { method: 'DELETE' });
+  if (res.ok) {
+    document.getElementById('preview-' + id).style.backgroundImage = '';
+    msg.innerHTML = '<span class="ok" style="padding:6px 10px; border-radius:8px;">✅ Banner removido</span>';
+    carregar();
+  } else {
+    msg.innerHTML = '<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ Erro ao remover</span>';
+  }
+}
+
+async function excluirEvento(id, nome) {
+  if (!confirm(`Excluir o evento "${nome}"? Isso apaga também todos os grupos e a lista de convidados dele. Não tem como desfazer.`)) {
+    return;
+  }
+  const res = await fetch('/api/eventos/' + id, { method: 'DELETE' });
+  if (res.ok) {
+    carregar();
+  } else {
+    const data = await res.json();
+    alert(data.erro || 'Erro ao excluir o evento');
+  }
+}
+
+async function enviarImagem(id) {
+  const input = document.getElementById('imagem-' + id);
+  const msg = document.getElementById('msg-' + id);
+  if (!input.files[0]) {
+    msg.innerHTML = '<span class="erro" style="padding:6px 10px; border-radius:8px;">Escolha uma imagem primeiro</span>';
+    return;
+  }
+  const formData = new FormData();
+  formData.append('imagem', input.files[0]);
+
+  const res = await fetch('/api/eventos/' + id + '/banner', {
+    method: 'POST',
+    body: formData
+  });
+  const data = await res.json();
+  if (res.ok) {
+    document.getElementById('preview-' + id).style.backgroundImage = `url('${data.banner_url}')`;
+    msg.innerHTML = '<span class="ok" style="padding:6px 10px; border-radius:8px;">✅ Imagem atualizada</span>';
+  } else {
+    msg.innerHTML = `<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ ${data.erro}</span>`;
+  }
+}
+
+carregar();
+
+if (new URLSearchParams(window.location.search).get('novo') === '1') {
+  abrirFormNovoEvento();
+}
+</script>
+
+</body>
+</html>

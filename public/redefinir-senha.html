@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redefinir senha — Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .wrap { width: 100%; max-width: 380px; }
+  .topo { text-align: center; margin-bottom: 22px; }
+  .topo h1 { font-size: 24px; margin: 0 0 4px; }
+  .topo p { color: var(--cinza-400); font-size: 13px; margin: 0; }
+  .rotulo {
+    font-size: 12px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .link-alt { text-align: center; margin-top: 16px; font-size: 13px; }
+  .link-alt a { color: var(--prata); text-decoration: none; }
+  .link-alt a:hover { color: var(--branco); }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-simples">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+  </div>
+</nav>
+
+<div class="auth-centro">
+<div class="wrap">
+  <div class="topo">
+    <h1 class="titulo-fest">Nova senha</h1>
+    <p>Escolha uma nova senha de acesso</p>
+  </div>
+
+  <div class="card">
+    <form id="form" onsubmit="return redefinir(event)">
+      <span class="rotulo">Nova senha</span>
+      <input type="password" id="novaSenha" placeholder="mínimo 6 caracteres" autocomplete="new-password">
+      <button type="submit">Salvar nova senha</button>
+      <div id="msg"></div>
+    </form>
+  </div>
+
+  <div class="link-alt">
+    <a href="/login.html">← Voltar para o login</a>
+  </div>
+</div>
+</div>
+
+<script>
+const token = new URLSearchParams(window.location.search).get('token');
+
+if (!token) {
+  document.getElementById('form').innerHTML = '<div class="msg erro">Link inválido. Peça uma nova recuperação.</div>';
+}
+
+async function redefinir(e) {
+  e.preventDefault();
+  const novaSenha = document.getElementById('novaSenha').value;
+  const msg = document.getElementById('msg');
+
+  const res = await fetch('/api/redefinir-senha', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, novaSenha })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    msg.innerHTML = '<div class="msg ok">✅ Senha alterada! Redirecionando...</div>';
+    setTimeout(() => window.location.href = '/login.html', 1500);
+  } else {
+    msg.innerHTML = `<div class="msg erro">❌ ${data.erro}</div>`;
+  }
+  return false;
+}
+</script>
+
+</body>
+</html>

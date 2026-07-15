@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard - Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .pagina { padding: 28px; max-width: 900px; margin: 0 auto; }
+  .oculto { display: none; }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .top h1 { font-size: 24px; margin: 0; }
+  .controles {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  select {
+    width: auto;
+    min-width: 200px;
+    margin-bottom: 0;
+  }
+  button { width: auto; padding: 12px 18px; }
+
+  .tabela-wrap {
+    background: linear-gradient(160deg, rgba(31,31,35,0.9), rgba(12,12,14,0.9));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--cinza-700);
+    text-align: left;
+    font-size: 14px;
+  }
+  th {
+    color: var(--cinza-400);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--cinza-600);
+  }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+  tbody tr:hover { background: rgba(255,255,255,0.05); }
+  tbody tr:last-child td { border-bottom: none; }
+  td:first-child {
+    color: var(--cinza-300);
+    font-weight: 700;
+    width: 50px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  td:nth-child(2) { font-weight: 600; }
+
+  .vazio {
+    padding: 40px;
+    text-align: center;
+    color: var(--cinza-400);
+    font-size: 14px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+  .badge.pendente { background: var(--cinza-800); color: var(--cinza-300); border: 1px solid var(--cinza-600); }
+  .badge.confirmado { background: var(--ok-bg); color: var(--ok-fg); border: 1px solid rgba(126,230,172,0.3); }
+
+  .add-manual {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .add-manual input { margin-bottom: 0; flex: 1 1 180px; }
+  .add-manual button { flex: 0 0 auto; width: auto; }
+
+  .bloco {
+    margin-bottom: 20px;
+  }
+  .bloco-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .bloco-sub {
+    font-size: 13px;
+    color: var(--cinza-400);
+    margin: 0 0 16px;
+  }
+  .grupo-destaque {
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(236,238,242,0.18);
+    background: linear-gradient(160deg, rgba(236,238,242,0.05), rgba(236,238,242,0.015));
+  }
+  .grupo-evento-nome {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .stats-mini {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .stat-item {
+    flex: 1 1 110px;
+    text-align: center;
+    background: var(--preto2);
+    border: 1px solid var(--cinza-700);
+    border-radius: 12px;
+    padding: 12px 10px;
+  }
+  .stat-item.destaque {
+    background: var(--ok-bg);
+    border-color: rgba(126,230,172,0.3);
+  }
+  .stat-valor {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--branco);
+  }
+  .stat-item.destaque .stat-valor { color: var(--ok-fg); }
+  .stat-label {
+    font-size: 10px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .stat-item.destaque .stat-label { color: var(--ok-fg); opacity: .85; }
+  .linha-link { display: flex; gap: 8px; }
+  .linha-link input { flex: 1 1 auto; min-width: 0; margin-bottom: 0; font-size: 12px; }
+  .linha-link button { flex: 0 0 auto; width: auto; white-space: nowrap; }
+  .linha-criar-grupo { display: flex; gap: 8px; align-items: center; }
+  .linha-criar-grupo input { flex: 1 1 auto; min-width: 0; margin-bottom: 0; }
+  .linha-criar-grupo button { flex: 0 0 auto; width: auto; white-space: nowrap; }
+  .festa-pick-card {
+    padding: 18px;
+    border-radius: 16px;
+    background: linear-gradient(160deg, rgba(28,28,32,0.92), rgba(10,10,12,0.94));
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 12px;
+  }
+  .festa-pick-nome {
+    font-size: 28px;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--branco), var(--cinza-300));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .vazio-grupos { color: var(--cinza-400); font-size: 13px; margin: 0; }
+
+  .colapsavel {
+    border-radius: 16px;
+    margin-bottom: 12px;
+    background: linear-gradient(160deg, rgba(28,28,32,0.92), rgba(10,10,12,0.94));
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .colapsavel-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    user-select: none;
+  }
+  .colapsavel-summary::-webkit-details-marker { display: none; }
+  .colapsavel-summary-nome { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .colapsavel-summary-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mini-pill {
+    font-size: 11px;
+    color: var(--cinza-300);
+    background: var(--preto2);
+    border: 1px solid var(--cinza-700);
+    padding: 4px 9px;
+    border-radius: 100px;
+  }
+  .mini-pill.destaque { color: var(--ok-fg); border-color: rgba(126,230,172,0.3); background: var(--ok-bg); }
+  .chevron-mini {
+    width: 18px;
+    height: 18px;
+    color: var(--cinza-400);
+    transition: transform .25s ease;
+    flex-shrink: 0;
+  }
+  .colapsavel[open] .chevron-mini { transform: rotate(180deg); }
+  .colapsavel-corpo {
+    padding: 4px 20px 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .btn-excluir-evento {
+    width: auto;
+    padding: 10px 16px;
+    margin-top: 14px;
+    font-size: 12px;
+    background: none;
+    color: var(--erro-fg);
+    border: 1px solid rgba(255,155,155,0.3);
+    box-shadow: none;
+  }
+  .btn-excluir-evento::before { display: none; }
+  .btn-excluir-evento:hover { background: rgba(255,155,155,0.1); filter: none; transform: none; }
+
+  .linha-btns-excluir {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn-excluir-grupo {
+    width: auto;
+    padding: 10px 16px;
+    margin-top: 14px;
+    font-size: 12px;
+    background: none;
+    color: var(--cinza-300);
+    border: 1px solid var(--cinza-600);
+    box-shadow: none;
+  }
+  .btn-excluir-grupo::before { display: none; }
+  .btn-excluir-grupo:hover { background: var(--cinza-800); filter: none; transform: none; }
+
+  .form-criar-evento {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 8px;
+  }
+  .form-criar-evento .campo-nome { flex: 1 1 220px; }
+  .form-criar-evento .campo-valor { width: 130px; flex: 0 0 auto; }
+  .form-criar-evento label { margin-top: 0; }
+  .form-criar-evento input { margin-bottom: 0; }
+  .form-criar-evento button { flex: 0 0 auto; width: auto; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+    <button class="navbar-toggle" id="navToggle" aria-label="Abrir menu" onclick="this.classList.toggle('aberto'); document.getElementById('navMenu').classList.toggle('aberto')">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="navbar-menu" id="navMenu">
+      <a href="/admin.html" class="navbar-link oculto" id="linkEventos">Eventos</a>
+      <a href="/dashboard.html" class="navbar-link ativo">Lista de convidados</a>
+      <a href="/caixa.html" class="navbar-link">Caixa</a>
+      <a href="/login.html?cadastro=1" class="navbar-link">+ Novo RP</a>
+      <a href="/gerenciar-rps.html" class="navbar-link oculto" id="linkGerenciar">Gerenciar RPs</a>
+      <a href="/conta.html" class="navbar-link">Minha conta</a>
+      <button class="navbar-sair" onclick="sair()">Sair</button>
+    </div>
+  </div>
+</nav>
+
+<div class="pagina">
+  <div class="bloco card">
+    <div class="bloco-header">👑 Meus grupos</div>
+    <p class="bloco-sub">O preço e o link que você manda pro seu cliente entrar na lista.</p>
+    <div id="listaMeusGrupos"></div>
+  </div>
+
+  <div class="bloco card">
+    <div class="bloco-header">✦ Criar evento novo</div>
+    <p class="bloco-sub">Cria uma festa nova do zero, com seu próprio grupo já dentro.</p>
+    <div class="form-criar-evento">
+      <div class="campo-nome">
+        <label>Nome da festa</label>
+        <input type="text" id="novoEventoNome" placeholder="ex: Festa Black & Silver">
+      </div>
+      <div class="campo-valor">
+        <label>Seu valor (R$)</label>
+        <input type="number" step="0.01" id="novoEventoValor" placeholder="ex: 60">
+      </div>
+      <button class="btn-secundario" onclick="criarEvento()">Criar evento e meu grupo</button>
+    </div>
+    <div class="msg" id="msgNovoEvento"></div>
+  </div>
+
+  <div class="bloco card">
+    <div class="bloco-header">🎉 Entrar em outro evento</div>
+    <p class="bloco-sub">Já existe uma festa criada por outra pessoa? Crie seu grupo dentro dela.</p>
+    <div id="listaEventosSemGrupo"></div>
+  </div>
+
+  <div class="bloco top">
+    <h1 class="titulo-fest">📋 Lista de convidados</h1>
+    <div class="controles">
+      <select id="grupo" onchange="carregarLista()"></select>
+      <button onclick="exportarExcel()">Exportar Excel</button>
+    </div>
+  </div>
+
+  <div class="add-manual">
+    <input type="text" id="manualNome" placeholder="Nome completo (adicionar manualmente)">
+    <input type="text" id="manualWhats" placeholder="WhatsApp">
+    <input type="email" id="manualEmail" placeholder="E-mail (opcional)">
+    <button class="btn-secundario" style="background:var(--cinza-800); color:#fff; border:1px solid var(--cinza-600); box-shadow:none;" onclick="adicionarManual()">+ Adicionar à lista</button>
+  </div>
+  <div id="msgManual"></div>
+
+  <div class="tabela-wrap">
+    <table>
+      <thead><tr><th>Nº</th><th>Nome completo</th><th>WhatsApp</th><th>E-mail</th><th>Entrou em</th><th>Status</th></tr></thead>
+      <tbody id="tabela"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+let listaAtual = [];
+
+let souAdmin = false;
+
+async function verificarPapel() {
+  const res = await fetch('/api/sessao');
+  const sessao = await res.json();
+  if (sessao.role === 'admin') {
+    souAdmin = true;
+    document.getElementById('linkEventos').classList.remove('oculto');
+    document.getElementById('linkGerenciar').classList.remove('oculto');
+  }
+}
+
+async function carregarEventos() {
+  const res = await fetch('/api/grupos/meus');
+  if (res.status === 401) return window.location.href = '/login.html';
+  const grupos = await res.json();
+  document.getElementById('grupo').innerHTML = grupos.length
+    ? grupos.map(g =>
+        `<option value="${g.id}">${g.evento_nome} ${g.evento_ativo ? '' : '(encerrada)'} — R$ ${g.valor.toFixed(2)}</option>`
+      ).join('')
+    : '<option value="">Você ainda não tem grupo em nenhum evento</option>';
+  carregarLista();
+}
+
+async function carregarMeusGrupos() {
+  const resGrupos = await fetch('/api/grupos/meus');
+  const meusGrupos = resGrupos.ok ? await resGrupos.json() : [];
+
+  const resEventos = await fetch('/api/eventos');
+  const eventosAtivos = resEventos.ok ? await resEventos.json() : [];
+
+  const listaMeus = document.getElementById('listaMeusGrupos');
+  const abertosMeus = Array.from(listaMeus.querySelectorAll('.colapsavel[open]')).map(d => d.id);
+  listaMeus.innerHTML = meusGrupos.length ? meusGrupos.map(g => `
+    <details class="colapsavel" id="grupo-item-${g.id}">
+      <summary class="colapsavel-summary">
+        <div>
+          <div class="colapsavel-summary-nome">${g.evento_nome}</div>
+          <div class="colapsavel-summary-pills">
+            <span class="mini-pill">${g.inscritos} na lista</span>
+            <span class="mini-pill">${g.pagos} pagos</span>
+            <span class="mini-pill destaque">R$ ${g.total_ganho.toFixed(2)}</span>
+          </div>
+        </div>
+        <svg class="chevron-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </summary>
+      <div class="colapsavel-corpo">
+        <label style="margin-top:0;">Valor (R$)</label>
+        <div class="linha-criar-grupo">
+          <input type="number" step="0.01" id="valorGrupo-${g.id}" value="${g.valor}">
+          <button class="btn-secundario" onclick="salvarValorGrupo(${g.id})">Salvar valor</button>
+        </div>
+        <label>Link (manda pro cliente)</label>
+        <div class="linha-link">
+          <input type="text" readonly id="linkGrupo-${g.id}" value="${window.location.origin}/grupo.html?slug=${g.slug}">
+          <button class="btn-secundario" onclick="copiarLink(${g.id})">Copiar</button>
+        </div>
+        <div class="msg" id="msgGrupo-${g.id}"></div>
+        <div class="linha-btns-excluir">
+          <button class="btn-excluir-grupo" onclick="excluirGrupo(${g.id}, '${g.evento_nome.replace(/'/g, "\\'")}')">Excluir meu grupo</button>
+          ${(g.posso_excluir_evento || souAdmin) ? `<button class="btn-excluir-evento" onclick="excluirEvento(${g.evento_id}, '${g.evento_nome.replace(/'/g, "\\'")}')">Excluir evento</button>` : ''}
+        </div>
+      </div>
+    </details>
+  `).join('') : '<p class="vazio-grupos">Você ainda não criou nenhum grupo.</p>';
+  abertosMeus.forEach(id => { const el = document.getElementById(id); if (el) el.open = true; });
+
+  const idsComGrupo = meusGrupos.map(g => g.evento_id);
+  const semGrupo = eventosAtivos.filter(ev => !idsComGrupo.includes(ev.id));
+  const listaSem = document.getElementById('listaEventosSemGrupo');
+  listaSem.innerHTML = semGrupo.length ? semGrupo.map(ev => `
+    <details class="colapsavel">
+      <summary class="colapsavel-summary">
+        <div class="colapsavel-summary-nome">${ev.nome}</div>
+        <svg class="chevron-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </summary>
+      <div class="colapsavel-corpo">
+        <label style="margin-top:0;">Seu valor (R$)</label>
+        <div class="linha-criar-grupo">
+          <input type="number" step="0.01" id="valorNovoGrupo-${ev.id}" placeholder="ex: 60">
+          <button class="btn-secundario" onclick="criarGrupo(${ev.id})">Criar meu grupo</button>
+        </div>
+        <div class="msg" id="msgNovoGrupo-${ev.id}"></div>
+      </div>
+    </details>
+  `).join('') : '<p class="vazio-grupos">Nenhum evento novo pra criar grupo agora.</p>';
+}
+
+async function excluirEvento(eventoId, nome) {
+  if (!confirm(`Excluir o evento "${nome}"? Isso apaga também os grupos e a lista de convidados dele, de todos os RPs. Não tem como desfazer.`)) {
+    return;
+  }
+  const res = await fetch('/api/eventos/' + eventoId, { method: 'DELETE' });
+  if (res.ok) {
+    carregarMeusGrupos();
+    carregarEventos();
+  } else {
+    const data = await res.json();
+    alert(data.erro || 'Erro ao excluir o evento');
+  }
+}
+
+async function excluirGrupo(grupoId, nomeEvento) {
+  if (!confirm(`Sair da festa "${nomeEvento}"? Isso apaga seu grupo e sua lista de convidados nesse evento. O evento continua existindo pros outros RPs. Não tem como desfazer.`)) {
+    return;
+  }
+  const res = await fetch('/api/grupos/' + grupoId, { method: 'DELETE' });
+  if (res.ok) {
+    carregarMeusGrupos();
+    carregarEventos();
+  } else {
+    const data = await res.json();
+    alert(data.erro || 'Erro ao excluir o grupo');
+  }
+}
+
+async function criarEvento() {
+  const nome = document.getElementById('novoEventoNome').value.trim();
+  const valor = document.getElementById('novoEventoValor').value;
+  const msg = document.getElementById('msgNovoEvento');
+
+  if (!nome || !valor) {
+    msg.innerHTML = '<div class="msg erro">Preencha o nome e o valor</div>';
+    return;
+  }
+
+  const resEvento = await fetch('/api/eventos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome, valor })
+  });
+  const dataEvento = await resEvento.json();
+  if (!resEvento.ok) {
+    msg.innerHTML = `<div class="msg erro">❌ ${dataEvento.erro}</div>`;
+    return;
+  }
+
+  const resGrupo = await fetch('/api/grupos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ evento_id: dataEvento.evento_id, valor })
+  });
+  const dataGrupo = await resGrupo.json();
+  if (!resGrupo.ok) {
+    msg.innerHTML = `<div class="msg erro">Evento criado, mas não deu pra criar seu grupo: ${dataGrupo.erro}</div>`;
+    carregarMeusGrupos();
+    return;
+  }
+
+  document.getElementById('novoEventoNome').value = '';
+  document.getElementById('novoEventoValor').value = '';
+  msg.innerHTML = '<div class="msg ok">✅ Prontinho! Evento e seu grupo criados, o link já está ali em cima.</div>';
+  carregarMeusGrupos();
+}
+
+async function criarGrupo(eventoId) {
+  const valor = document.getElementById('valorNovoGrupo-' + eventoId).value;
+  const msg = document.getElementById('msgNovoGrupo-' + eventoId);
+  if (!valor) {
+    msg.innerHTML = '<span class="erro" style="padding:6px 10px; border-radius:8px;">Informe o valor do seu grupo</span>';
+    return;
+  }
+  const res = await fetch('/api/grupos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ evento_id: eventoId, valor })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    carregarMeusGrupos();
+    carregarEventos();
+  } else {
+    msg.innerHTML = `<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ ${data.erro}</span>`;
+  }
+}
+
+async function salvarValorGrupo(grupoId) {
+  const valor = document.getElementById('valorGrupo-' + grupoId).value;
+  const msg = document.getElementById('msgGrupo-' + grupoId);
+  const res = await fetch('/api/grupos/' + grupoId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ valor })
+  });
+  if (res.ok) {
+    msg.innerHTML = '<span class="ok" style="padding:6px 10px; border-radius:8px;">✅ Valor atualizado</span>';
+    carregarEventos();
+  } else {
+    msg.innerHTML = '<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ Erro ao salvar</span>';
+  }
+}
+
+function copiarLink(grupoId) {
+  const input = document.getElementById('linkGrupo-' + grupoId);
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value);
+  const msg = document.getElementById('msgGrupo-' + grupoId);
+  msg.innerHTML = '<span class="ok" style="padding:6px 10px; border-radius:8px;">✅ Link copiado</span>';
+}
+
+async function carregarLista() {
+  const id = document.getElementById('grupo').value;
+  if (!id) { document.getElementById('tabela').innerHTML = '<tr><td colspan="6" class="vazio">Você ainda não tem grupo em nenhum evento</td></tr>'; return; }
+  const res = await fetch('/api/lista/' + id);
+  if (res.status === 401) return window.location.href = '/login.html';
+  listaAtual = await res.json();
+  const tabela = document.getElementById('tabela');
+  if (listaAtual.length === 0) {
+    tabela.innerHTML = `<tr><td colspan="6" class="vazio">Ninguém na lista ainda</td></tr>`;
+    return;
+  }
+  tabela.innerHTML = listaAtual.map(p => `
+    <tr>
+      <td>${String(p.numero).padStart(3, '0')}</td>
+      <td>${p.nome_completo}</td>
+      <td>${p.whatsapp}</td>
+      <td>${p.email || '—'}</td>
+      <td>${p.criado_em}</td>
+      <td>${p.pago ? '<span class="badge confirmado">✔ Pago</span>' : '<span class="badge pendente">Pendente</span>'}</td>
+    </tr>
+  `).join('');
+}
+
+async function sair() {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+}
+
+async function adicionarManual() {
+  const grupo_id = document.getElementById('grupo').value;
+  const nome_completo = document.getElementById('manualNome').value.trim();
+  const whatsapp = document.getElementById('manualWhats').value.trim();
+  const email = document.getElementById('manualEmail').value.trim();
+  const msg = document.getElementById('msgManual');
+
+  if (!grupo_id || !nome_completo || !whatsapp) {
+    msg.innerHTML = '<div class="msg erro">Preencha nome e whatsapp</div>';
+    return;
+  }
+
+  const res = await fetch('/api/inscricao-manual', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ grupo_id, nome_completo, whatsapp, email })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    msg.innerHTML = `<div class="msg ok">✅ Adicionado com o número ${String(data.numero).padStart(3, '0')}</div>`;
+    document.getElementById('manualNome').value = '';
+    document.getElementById('manualWhats').value = '';
+    document.getElementById('manualEmail').value = '';
+    carregarLista();
+  } else {
+    msg.innerHTML = `<div class="msg erro">❌ ${data.erro}</div>`;
+  }
+}
+
+function exportarExcel() {
+  const grupoId = document.getElementById('grupo').value;
+  if (!grupoId) return;
+  window.location.href = `/api/lista/${grupoId}/exportar`;
+}
+
+(async () => {
+  await verificarPapel();
+  carregarEventos();
+  carregarMeusGrupos();
+})();
+</script>
+
+</body>
+</html>

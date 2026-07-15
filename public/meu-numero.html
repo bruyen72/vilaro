@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esqueci meu número — Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .wrap { width: 100%; max-width: 420px; }
+  .topo { text-align: center; margin-bottom: 22px; }
+  .topo h1 { font-size: 24px; margin: 0 0 4px; }
+  .topo p { color: var(--cinza-400); font-size: 13px; margin: 0; }
+  .rotulo {
+    font-size: 12px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .link-alt {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+  }
+  .link-alt a { color: var(--prata); text-decoration: none; }
+  .link-alt a:hover { color: var(--branco); }
+
+  .resultado-item {
+    background: var(--preto2);
+    border: 1px solid var(--cinza-700);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 12px;
+  }
+  .resultado-item .evento { font-size: 13px; color: var(--cinza-300); margin-bottom: 4px; }
+  .resultado-item .numero {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+  .resultado-item .rp { font-size: 13px; color: var(--cinza-300); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-simples">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+  </div>
+</nav>
+
+<div class="auth-centro">
+<div class="wrap">
+  <div class="topo">
+    <h1 class="titulo-fest">Esqueci meu número</h1>
+    <p>Digite o whatsapp que você usou pra entrar na lista</p>
+  </div>
+
+  <div class="card">
+    <form onsubmit="return buscar(event)">
+      <span class="rotulo">WhatsApp</span>
+      <input type="tel" id="whatsapp" placeholder="(DDD) 00000-0000" inputmode="numeric" autocomplete="tel">
+      <button type="submit">Buscar meu número</button>
+    </form>
+    <div id="resultado"></div>
+  </div>
+
+  <div class="link-alt">
+    <a href="/index.html">← Voltar para os eventos</a>
+  </div>
+</div>
+</div>
+
+<script>
+async function buscar(e) {
+  e.preventDefault();
+  const whatsapp = document.getElementById('whatsapp').value.trim();
+  const resultado = document.getElementById('resultado');
+  resultado.innerHTML = '';
+
+  if (!whatsapp) {
+    resultado.innerHTML = '<div class="msg erro">Digite o whatsapp</div>';
+    return false;
+  }
+
+  const res = await fetch('/api/meu-numero/' + encodeURIComponent(whatsapp));
+  const encontrados = await res.json();
+
+  if (!encontrados.length) {
+    resultado.innerHTML = '<div class="msg erro">Nenhuma inscrição encontrada com esse whatsapp</div>';
+    return false;
+  }
+
+  resultado.innerHTML = encontrados.map(r => `
+    <div class="resultado-item">
+      <div class="evento">${r.evento_nome}</div>
+      <div class="numero">${String(r.numero).padStart(3, '0')}</div>
+      <div class="rp">Fale o nome "${r.rp_nome}" e esse número na entrada${r.pago ? ' · já confirmado' : ''}</div>
+    </div>
+  `).join('');
+  return false;
+}
+</script>
+
+</body>
+</html>

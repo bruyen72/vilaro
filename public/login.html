@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .wrap { width: 100%; max-width: 380px; }
+  .topo { text-align: center; margin-bottom: 22px; }
+  .topo h1 { font-size: 26px; margin: 0 0 4px; }
+  .topo p { color: var(--cinza-400); font-size: 13px; margin: 0; }
+  .rotulo {
+    font-size: 12px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .link-alt {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--cinza-300);
+  }
+  .link-alt a { color: var(--prata); text-decoration: none; cursor: pointer; }
+  .link-alt a:hover { color: var(--branco); }
+  .oculto { display: none; }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-simples">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+  </div>
+</nav>
+
+<div class="auth-centro">
+<div class="wrap">
+  <div class="topo">
+    <h1 class="titulo-fest">✦ Área do RP</h1>
+    <p id="subtitulo">Carregando...</p>
+  </div>
+
+  <div class="card">
+    <!-- Formulário de login -->
+    <form id="formLogin" class="oculto" onsubmit="return login(event)">
+      <span class="rotulo">Usuário ou e-mail</span>
+      <input type="text" id="loginUsuario" placeholder="seu usuário" autocomplete="username">
+      <span class="rotulo">Senha</span>
+      <input type="password" id="loginSenha" placeholder="••••••••" autocomplete="current-password">
+      <button type="submit">Entrar</button>
+      <div id="msgLogin"></div>
+    </form>
+
+    <!-- Formulário de cadastro (primeiro acesso) -->
+    <form id="formRegistro" class="oculto" onsubmit="return registrar(event)">
+      <span class="rotulo">Usuário</span>
+      <input type="text" id="regUsuario" placeholder="ex: rp" autocomplete="username">
+      <span class="rotulo">E-mail</span>
+      <input type="email" id="regEmail" placeholder="seu@email.com" autocomplete="email">
+      <span class="rotulo">Senha</span>
+      <input type="password" id="regSenha" placeholder="mínimo 6 caracteres" autocomplete="new-password">
+      <button type="submit">Criar conta e entrar</button>
+      <div id="msgRegistro"></div>
+    </form>
+  </div>
+
+  <div class="link-alt">
+    <a onclick="location.href='/esqueci-senha.html'" id="linkEsqueci" class="oculto">Esqueci minha senha</a>
+    <a onclick="location.href='/login.html?cadastro=1'" id="linkCadastro" class="oculto">Cadastrar novo RP</a>
+  </div>
+</div>
+</div>
+
+<script>
+async function iniciar() {
+  const params = new URLSearchParams(window.location.search);
+  const cadastro = params.get('cadastro') === '1';
+
+  if (!cadastro) {
+    const resSessao = await fetch('/api/sessao');
+    const sessao = await resSessao.json();
+    if (sessao.logado) {
+      window.location.href = params.get('next') || (sessao.role === 'admin' ? '/admin.html' : '/dashboard.html');
+      return;
+    }
+  }
+
+  const res = await fetch('/api/gerentes/existe');
+  const { existe } = await res.json();
+  const subtitulo = document.getElementById('subtitulo');
+
+  if (cadastro) {
+    subtitulo.textContent = 'Cadastrar novo RP';
+    document.getElementById('formRegistro').classList.remove('oculto');
+  } else if (existe) {
+    subtitulo.textContent = 'Entre com sua conta de RP';
+    document.getElementById('formLogin').classList.remove('oculto');
+    document.getElementById('linkEsqueci').classList.remove('oculto');
+    document.getElementById('linkCadastro').classList.remove('oculto');
+  } else {
+    subtitulo.textContent = 'Primeiro acesso — crie a conta do RP';
+    document.getElementById('formRegistro').classList.remove('oculto');
+  }
+}
+
+async function login(e) {
+  e.preventDefault();
+  const usuario = document.getElementById('loginUsuario').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const msg = document.getElementById('msgLogin');
+
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ usuario, senha })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    const params = new URLSearchParams(window.location.search);
+    window.location.href = params.get('next') || (data.role === 'admin' ? '/admin.html' : '/dashboard.html');
+  } else {
+    msg.innerHTML = `<div class="msg erro">❌ ${data.erro}</div>`;
+  }
+  return false;
+}
+
+async function registrar(e) {
+  e.preventDefault();
+  const usuario = document.getElementById('regUsuario').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const senha = document.getElementById('regSenha').value;
+  const msg = document.getElementById('msgRegistro');
+
+  const res = await fetch('/api/registrar-gerente', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ usuario, email, senha })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    const resSessao = await fetch('/api/sessao');
+    const sessao = await resSessao.json();
+    window.location.href = sessao.role === 'admin' ? '/admin.html' : '/dashboard.html';
+  } else {
+    msg.innerHTML = `<div class="msg erro">❌ ${data.erro}</div>`;
+  }
+  return false;
+}
+
+iniciar();
+</script>
+
+</body>
+</html>

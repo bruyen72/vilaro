@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .banner {
+    position: relative;
+    width: 100%;
+    height: 46vh;
+    min-height: 280px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--cinza-900);
+    display: flex;
+    align-items: flex-end;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.08), transparent 60%);
+  }
+  .banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, #000 8%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.35) 100%);
+  }
+  .banner-texto {
+    position: relative;
+    z-index: 1;
+    padding: 26px 22px;
+    width: 100%;
+  }
+  .selo {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    color: #0a0a0a;
+    background: linear-gradient(135deg, var(--prata), var(--cinza-300));
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-bottom: 10px;
+  }
+  .banner-texto h1 {
+    margin: 0;
+    font-size: 36px;
+    text-transform: uppercase;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.9);
+    line-height: 1.05;
+  }
+  .banner-texto p {
+    margin: 8px 0 0;
+    color: var(--cinza-300);
+    font-size: 14px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+  }
+
+  .conteudo {
+    max-width: 440px;
+    margin: -28px auto 0;
+    position: relative;
+    z-index: 2;
+    padding: 0 20px 50px;
+  }
+
+  .rotulo {
+    font-size: 12px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .rp-opcao {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background: var(--preto2);
+    border: 1px solid var(--cinza-700);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color .2s ease, background .2s ease, transform .15s ease;
+  }
+  .rp-opcao:hover {
+    border-color: var(--prata);
+    background: var(--cinza-800);
+    transform: translateY(-1px);
+  }
+  .rp-opcao-nome { font-size: 15px; font-weight: 700; }
+
+  /* ---- Vitrine (lista de eventos) ---- */
+  .vitrine-topo {
+    text-align: center;
+    padding: 50px 20px 10px;
+  }
+  .vitrine-topo h1 {
+    font-size: 32px;
+    margin: 10px 0 6px;
+    text-transform: uppercase;
+  }
+  .vitrine-topo p {
+    color: var(--cinza-400);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .grade-eventos {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+  }
+
+  .evento-card {
+    cursor: pointer;
+    border-radius: 18px;
+    overflow: hidden;
+    background: linear-gradient(160deg, rgba(28,28,32,0.92), rgba(10,10,12,0.94));
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .evento-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255,255,255,0.25);
+    box-shadow: 0 16px 34px rgba(0,0,0,0.5);
+  }
+  .evento-card-banner {
+    height: 160px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--cinza-900);
+    position: relative;
+  }
+  .evento-card-banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.75), transparent 60%);
+  }
+  .evento-card-corpo { padding: 16px 18px 20px; }
+  .evento-card-nome {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .evento-card-desc {
+    font-size: 13px;
+    color: var(--cinza-300);
+    margin: 0 0 14px;
+    line-height: 1.4;
+    min-height: 18px;
+  }
+  .evento-card-rodape {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .evento-card-preco {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .evento-card-vagas {
+    font-size: 11px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .evento-card-vagas.lotado { color: var(--erro-fg); }
+
+  .vitrine-vazia {
+    text-align: center;
+    color: var(--cinza-400);
+    padding: 60px 20px;
+    font-size: 14px;
+  }
+
+  .oculto { display: none; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <a href="/meu-numero.html" class="navbar-link-simples">Esqueci meu número</a>
+      <a href="/login.html" class="navbar-link-simples">Área do RP</a>
+    </div>
+  </div>
+</nav>
+
+<!-- MODO VITRINE: lista de eventos ativos -->
+<div id="modoLista" class="oculto">
+  <div class="vitrine-topo">
+    <span class="selo">✦ Acesso VIP</span>
+    <h1 class="titulo-fest">Eventos abertos</h1>
+    <p>Escolha o evento e entre na lista</p>
+  </div>
+  <div class="grade-eventos" id="grade"></div>
+</div>
+
+<!-- MODO DETALHE: um evento específico -->
+<div id="modoDetalhe" class="oculto">
+  <div class="banner" id="banner">
+    <div class="banner-texto">
+      <span class="selo">✦ Acesso VIP</span>
+      <h1 class="titulo-fest" id="nomeEvento">Carregando...</h1>
+      <p id="descEvento"></p>
+    </div>
+  </div>
+
+  <div class="conteudo">
+    <div class="card" id="cardEscolhaRp">
+      <span class="rotulo" style="text-align:center; display:block;">Quem te chamou pra essa festa?</span>
+      <div id="listaRps"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+let eventoId = params.get('evento');
+let eventoAtual = null;
+
+async function carregar() {
+  const res = await fetch('/api/eventos');
+  const eventos = await res.json();
+
+  if (!eventoId) {
+    mostrarVitrine(eventos);
+    return;
+  }
+
+  eventoAtual = eventos.find(e => e.id == eventoId);
+  document.getElementById('modoLista').classList.add('oculto');
+  document.getElementById('modoDetalhe').classList.remove('oculto');
+
+  if (!eventoAtual) {
+    document.getElementById('nomeEvento').textContent = 'Evento não encontrado ou encerrado';
+    return;
+  }
+
+  document.getElementById('nomeEvento').textContent = eventoAtual.nome;
+  document.getElementById('descEvento').textContent = eventoAtual.descricao || '';
+
+  if (eventoAtual.banner_url) {
+    document.getElementById('banner').style.backgroundImage = `url(${eventoAtual.banner_url})`;
+  }
+
+  const resGrupos = await fetch(`/api/eventos/${eventoId}/grupos`);
+  const grupos = resGrupos.ok ? await resGrupos.json() : [];
+
+  if (grupos.length === 1) {
+    window.location.href = `/grupo.html?slug=${grupos[0].slug}`;
+    return;
+  }
+
+  const lista = document.getElementById('listaRps');
+  if (grupos.length === 0) {
+    lista.innerHTML = '<div class="vitrine-vazia">Nenhuma lista disponível. Peça o link direto pro seu RP.</div>';
+    return;
+  }
+
+  lista.innerHTML = grupos.map(g => `
+    <div class="rp-opcao" onclick="window.location.href='/grupo.html?slug=${g.slug}'">
+      <span class="rp-opcao-nome">${g.rp_nome}</span>
+    </div>
+  `).join('');
+}
+
+function mostrarVitrine(eventos) {
+  document.getElementById('modoDetalhe').classList.add('oculto');
+  document.getElementById('modoLista').classList.remove('oculto');
+  const grade = document.getElementById('grade');
+
+  if (eventos.length === 0) {
+    grade.innerHTML = '<div class="vitrine-vazia">Nenhum evento ativo no momento</div>';
+    return;
+  }
+
+  grade.innerHTML = eventos.map(ev => `
+      <div class="evento-card" onclick="window.location.href='/index.html?evento=${ev.id}'">
+        <div class="evento-card-banner" style="background-image:url('${ev.banner_url || ''}')"></div>
+        <div class="evento-card-corpo">
+          <p class="evento-card-nome">${ev.nome}</p>
+          <p class="evento-card-desc">${ev.descricao || ''}</p>
+          <div class="evento-card-rodape">
+            <span class="evento-card-preco">A partir de R$ ${ev.valor_min.toFixed(2)}</span>
+            <span class="evento-card-vagas">${ev.inscritos} na lista</span>
+          </div>
+        </div>
+      </div>
+  `).join('');
+}
+
+carregar();
+</script>
+
+</body>
+</html>

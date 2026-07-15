@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caixa - Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .pagina { padding: 24px; }
+  .wrap { max-width: 460px; margin: 0 auto; }
+
+  .topo { text-align: center; margin-bottom: 20px; }
+  .topo h1 { font-size: 26px; margin: 0 0 4px; }
+  .topo p { color: var(--cinza-400); font-size: 13px; margin: 0; }
+
+  select { margin-bottom: 18px; }
+  .oculto { display: none; }
+  .grupo-info {
+    text-align: center;
+    font-size: 13px;
+    color: var(--cinza-300);
+    background: var(--preto2);
+    border: 1px solid var(--cinza-700);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 18px;
+  }
+
+  .escolha-rp {
+    text-align: center;
+    color: var(--cinza-400);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .rp-opcao-caixa {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: var(--preto2);
+    border: 1px solid var(--cinza-700);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color .2s ease, background .2s ease;
+  }
+  .rp-opcao-caixa:hover { border-color: var(--prata); background: var(--cinza-800); }
+  .rp-opcao-caixa .cliente { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .rp-opcao-caixa .badge { margin-bottom: 0; }
+
+  .badge-rp {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: linear-gradient(135deg, var(--prata), var(--cinza-300));
+    color: #0a0a0a;
+    box-shadow: 0 0 14px rgba(255,255,255,0.3);
+  }
+
+  .busca-numero {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .busca-numero input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 4px;
+    padding: 16px;
+    margin-bottom: 0;
+  }
+
+  .resultado-vazio {
+    text-align: center;
+    color: var(--cinza-400);
+    font-size: 14px;
+    padding: 30px 10px;
+  }
+
+  .guest-card { margin-top: 18px; }
+  .guest-numero {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--cinza-400);
+    letter-spacing: 1px;
+  }
+  .guest-nome { font-size: 22px; font-weight: 700; margin: 2px 0; }
+  .guest-card .badge-rp { margin-bottom: 10px; }
+  .guest-whats { color: var(--cinza-300); font-size: 14px; margin-bottom: 16px; margin-top: 8px; }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 100px;
+    margin-bottom: 14px;
+  }
+  .badge.pendente { background: var(--cinza-800); color: var(--cinza-300); border: 1px solid var(--cinza-600); }
+  .badge.confirmado { background: var(--ok-bg); color: var(--ok-fg); border: 1px solid rgba(126,230,172,0.3); }
+
+  .linha-valor {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .linha-valor input { margin-bottom: 0; flex: 1 1 auto; min-width: 0; }
+  .linha-valor button { flex: 0 0 auto; width: auto; white-space: nowrap; min-width: 140px; }
+
+  .ja-pago {
+    text-align: center;
+    padding: 10px;
+    color: var(--cinza-300);
+    font-size: 13px;
+  }
+
+  .stats-card {
+    border-radius: 16px;
+    margin-bottom: 18px;
+    background: linear-gradient(160deg, rgba(28,28,32,0.92), rgba(10,10,12,0.94));
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .stats-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    color: var(--cinza-300);
+    user-select: none;
+  }
+  .stats-summary::-webkit-details-marker { display: none; }
+  .stats-summary .chevron {
+    width: 18px; height: 18px;
+    transition: transform .25s ease;
+  }
+  .stats-card[open] .stats-summary .chevron { transform: rotate(180deg); }
+  .stats-corpo {
+    padding: 4px 18px 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    gap: 22px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .donut-wrap {
+    position: relative;
+    width: 116px;
+    height: 116px;
+    flex-shrink: 0;
+  }
+  .donut {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(var(--ok-fg) calc(var(--pct, 0) * 1%), var(--cinza-800) 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .donut::before {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    background: var(--preto2);
+    border: 1px solid var(--cinza-700);
+  }
+  .donut-legenda {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .donut-numero {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 800;
+    z-index: 1;
+  }
+  .donut-label {
+    font-size: 10px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 1;
+  }
+
+  .lista-por-rp { flex: 1 1 200px; min-width: 180px; }
+  .rp-bar-row { margin-bottom: 10px; }
+  .rp-bar-row:last-child { margin-bottom: 0; }
+  .rp-bar-topo {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  .rp-bar-topo .nome { font-weight: 700; }
+  .rp-bar-topo .conta { color: var(--cinza-400); font-family: 'JetBrains Mono', monospace; }
+  .rp-bar-track {
+    height: 7px;
+    background: var(--cinza-800);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .rp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--prata), var(--ok-fg));
+    border-radius: 100px;
+    transition: width .4s ease;
+  }
+  .stats-vazio { color: var(--cinza-400); font-size: 13px; padding: 10px 0; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+    <button class="navbar-toggle" id="navToggle" aria-label="Abrir menu" onclick="this.classList.toggle('aberto'); document.getElementById('navMenu').classList.toggle('aberto')">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="navbar-menu" id="navMenu">
+      <a href="/admin.html" class="navbar-link oculto" id="linkEventos">Eventos</a>
+      <a href="/dashboard.html" class="navbar-link">Lista de convidados</a>
+      <a href="/caixa.html" class="navbar-link ativo">Caixa</a>
+      <a href="/login.html?cadastro=1" class="navbar-link">+ Novo RP</a>
+      <a href="/gerenciar-rps.html" class="navbar-link oculto" id="linkGerenciar">Gerenciar RPs</a>
+      <a href="/conta.html" class="navbar-link">Minha conta</a>
+      <button class="navbar-sair" onclick="sair()">Sair</button>
+    </div>
+  </div>
+</nav>
+
+<div class="pagina">
+<div class="wrap">
+  <div class="topo">
+    <h1 class="titulo-fest">🎟 Caixa</h1>
+    <p>Digite o número que o cliente falar e confirme o pagamento na hora.</p>
+  </div>
+
+  <select id="evento" onchange="mudarEvento()" class="oculto"></select>
+  <div id="eventoInfo" class="grupo-info oculto"></div>
+
+  <details class="stats-card">
+    <summary class="stats-summary">
+      <span id="statsTitulo">Estatísticas</span>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </summary>
+    <div class="stats-corpo" id="statsCorpo">
+      <div class="stats-vazio">Carregando...</div>
+    </div>
+  </details>
+
+  <div class="card">
+    <span class="rotulo" style="font-size:12px;color:var(--cinza-400);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px;">Número do cliente</span>
+    <div class="busca-numero">
+      <input type="text" inputmode="numeric" id="numero" placeholder="000" maxlength="5" autofocus>
+    </div>
+
+    <div id="area-resultado"></div>
+  </div>
+</div>
+</div>
+
+<script>
+let eventos = [];
+let atual = null;
+
+async function verificarPapel() {
+  const res = await fetch('/api/sessao');
+  const sessao = await res.json();
+  if (sessao.role === 'admin') {
+    document.getElementById('linkEventos').classList.remove('oculto');
+    document.getElementById('linkGerenciar').classList.remove('oculto');
+  }
+}
+
+async function carregarEventos() {
+  const res = await fetch('/api/eventos');
+  eventos = res.ok ? await res.json() : [];
+  const select = document.getElementById('evento');
+  const info = document.getElementById('eventoInfo');
+
+  select.innerHTML = eventos.length
+    ? eventos.map(ev => `<option value="${ev.id}">${ev.nome}</option>`).join('')
+    : '<option value="">Nenhum evento aberto agora</option>';
+
+  if (eventos.length === 1) {
+    select.classList.add('oculto');
+    info.classList.remove('oculto');
+    info.textContent = eventos[0].nome;
+  } else {
+    select.classList.remove('oculto');
+    info.classList.add('oculto');
+  }
+
+  mudarEvento();
+}
+
+function mudarEvento() {
+  limpar();
+  carregarStats();
+}
+
+function limpar() {
+  document.getElementById('numero').value = '';
+  document.getElementById('area-resultado').innerHTML = '';
+  document.getElementById('numero').focus();
+}
+
+function eventoId() {
+  return document.getElementById('evento').value;
+}
+
+async function carregarStats() {
+  const corpo = document.getElementById('statsCorpo');
+  const id = eventoId();
+  if (!id) {
+    corpo.innerHTML = '<div class="stats-vazio">Nenhum evento selecionado</div>';
+    return;
+  }
+
+  const res = await fetch(`/api/caixa-stats/${id}`);
+  if (!res.ok) { corpo.innerHTML = '<div class="stats-vazio">Não deu pra carregar</div>'; return; }
+  const stats = await res.json();
+
+  document.getElementById('statsTitulo').textContent = stats.somenteMeu ? 'Meu grupo' : 'Estatísticas do evento (todos os RPs)';
+
+  if (!stats.totalInscritos) {
+    corpo.innerHTML = stats.somenteMeu
+      ? '<div class="stats-vazio">Você ainda não tem ninguém na lista desse evento.</div>'
+      : '<div class="stats-vazio">Ainda não tem ninguém na lista desse evento.</div>';
+    return;
+  }
+
+  const pct = Math.round((stats.totalPagos / stats.totalInscritos) * 100);
+
+  const listaPorRp = stats.somenteMeu ? '' : `
+    <div class="lista-por-rp">
+      ${stats.porRp.map(r => {
+        const rpPct = r.inscritos ? Math.round((r.pagos / r.inscritos) * 100) : 0;
+        return `
+          <div class="rp-bar-row">
+            <div class="rp-bar-topo">
+              <span class="nome">${r.rp_nome}</span>
+              <span class="conta">${r.pagos}/${r.inscritos}</span>
+            </div>
+            <div class="rp-bar-track">
+              <div class="rp-bar-fill" style="width:${rpPct}%;"></div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  corpo.innerHTML = `
+    <div class="donut-wrap">
+      <div class="donut" style="--pct:${pct};"></div>
+      <div class="donut-legenda">
+        <div class="donut-numero">${pct}%</div>
+        <div class="donut-label">confirmados</div>
+      </div>
+    </div>
+    ${listaPorRp}
+  `;
+}
+
+document.getElementById('numero').addEventListener('input', debounce(buscar, 350));
+document.getElementById('numero').addEventListener('keydown', e => {
+  if (e.key === 'Enter') buscar();
+});
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+
+async function sair() {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+}
+
+async function buscar() {
+  const numero = document.getElementById('numero').value.trim();
+  const area = document.getElementById('area-resultado');
+  if (!numero) { area.innerHTML = ''; return; }
+
+  const res = await fetch(`/api/caixa-busca/${eventoId()}/${numero}`);
+  if (res.status === 401) return window.location.href = '/login.html';
+  const encontrados = await res.json();
+
+  if (!encontrados.length) {
+    area.innerHTML = `<div class="resultado-vazio">Ninguém na lista com o número <strong>${numero}</strong></div>`;
+    atual = null;
+    return;
+  }
+
+  if (encontrados.length === 1) {
+    atual = encontrados[0];
+    renderizarResultado();
+    return;
+  }
+
+  area.innerHTML = `
+    <div class="escolha-rp">Mais de um RP tem o número ${numero}, qual é o cliente?</div>
+    ${encontrados.map((d, i) => `
+      <div class="rp-opcao-caixa" onclick="escolherEncontrado(${i})">
+        <div>
+          <div class="cliente">${d.nome_completo}</div>
+          <span class="badge-rp">✦ ${d.rp_nome} · RP</span>
+        </div>
+        <span class="badge ${d.pago ? 'confirmado' : 'pendente'}">${d.pago ? '✔ pago' : 'pendente'}</span>
+      </div>
+    `).join('')}
+  `;
+  window._encontrados = encontrados;
+}
+
+function escolherEncontrado(i) {
+  atual = window._encontrados[i];
+  renderizarResultado();
+}
+
+function renderizarResultado() {
+  const area = document.getElementById('area-resultado');
+  const d = atual;
+
+  if (d.pago) {
+    area.innerHTML = `
+      <div class="guest-card">
+        <div class="guest-numero">Nº ${String(d.numero).padStart(3, '0')} confirmado</div>
+        <div class="guest-nome">${d.nome_completo}</div>
+        <span class="badge-rp">✦ ${d.rp_nome} · RP</span>
+        <div class="guest-whats">${formatarWhats(d.whatsapp)}</div>
+        <span class="badge confirmado">✔ Entrada confirmada</span>
+        <div class="ja-pago">Pago em ${d.checkin_em} · R$ ${Number(d.valor_pago).toFixed(2)}</div>
+      </div>
+    `;
+    return;
+  }
+
+  area.innerHTML = `
+    <div class="guest-card">
+      <div class="guest-numero">Nº ${String(d.numero).padStart(3, '0')}</div>
+      <div class="guest-nome">${d.nome_completo}</div>
+      <span class="badge-rp">✦ ${d.rp_nome} · RP</span>
+      <div class="guest-whats">${formatarWhats(d.whatsapp)}</div>
+      <span class="badge pendente">Aguardando pagamento</span>
+
+      <div class="linha-valor">
+        <input type="number" step="0.01" id="valorPago" value="${d.valor_sugerido}">
+        <button onclick="confirmar()">Confirmar</button>
+      </div>
+    </div>
+  `;
+}
+
+async function confirmar() {
+  const valor_pago = document.getElementById('valorPago').value;
+  const res = await fetch(`/api/caixa/${atual.grupo_id}/${atual.numero}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ valor_pago })
+  });
+  if (res.ok) {
+    const data = await res.json();
+    atual = { ...atual, pago: true, valor_pago: data.inscrito.valor_pago, checkin_em: data.inscrito.checkin_em };
+    renderizarResultado();
+    carregarStats();
+    setTimeout(limpar, 1800);
+  }
+}
+
+function formatarWhats(w) {
+  if (!w) return '';
+  const n = w.replace(/\D/g, '');
+  if (n.length === 11) return `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`;
+  if (n.length === 10) return `(${n.slice(0,2)}) ${n.slice(2,6)}-${n.slice(6)}`;
+  return w;
+}
+
+verificarPapel();
+carregarEventos();
+</script>
+
+</body>
+</html>

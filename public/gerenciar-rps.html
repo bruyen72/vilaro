@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerenciar RPs - Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .pagina { padding: 28px; max-width: 900px; margin: 0 auto; }
+
+  .topo { margin-bottom: 24px; }
+  .topo h1 { font-size: 26px; margin: 0 0 4px; }
+  .topo p { color: var(--cinza-400); font-size: 13px; margin: 0; }
+
+  .rp-card {
+    background: linear-gradient(160deg, rgba(28,28,32,0.92), rgba(10,10,12,0.94));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .rp-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .rp-nome { font-size: 17px; font-weight: 700; }
+  .rp-email { font-size: 12px; color: var(--cinza-400); }
+
+  .badge-papel {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-left: 8px;
+  }
+  .badge-papel.admin { background: var(--ok-bg); color: var(--ok-fg); border: 1px solid rgba(126,230,172,0.3); }
+  .badge-papel.rp { background: var(--cinza-800); color: var(--cinza-300); border: 1px solid var(--cinza-600); }
+
+  .rp-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .rp-stats span {
+    font-size: 12px;
+    color: var(--cinza-300);
+    background: var(--preto2);
+    border: 1px solid var(--cinza-700);
+    padding: 5px 10px;
+    border-radius: 100px;
+  }
+
+  .rp-acoes {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .rp-acoes button { width: auto; padding: 10px 16px; font-size: 12px; }
+  .rp-acoes input { width: auto; flex: 1 1 160px; margin-bottom: 0; }
+
+  .btn-excluir {
+    width: auto;
+    padding: 10px 16px;
+    font-size: 12px;
+    background: none;
+    color: var(--erro-fg);
+    border: 1px solid rgba(255,155,155,0.3);
+    box-shadow: none;
+  }
+  .btn-excluir::before { display: none; }
+  .btn-excluir:hover { background: rgba(255,155,155,0.1); filter: none; transform: none; }
+  .btn-excluir:disabled { opacity: .35; cursor: not-allowed; }
+
+  .form-senha {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .msg-rp { margin-top: 8px; font-size: 13px; }
+
+  .oculto { display: none; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+    <button class="navbar-toggle" id="navToggle" aria-label="Abrir menu" onclick="this.classList.toggle('aberto'); document.getElementById('navMenu').classList.toggle('aberto')">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="navbar-menu" id="navMenu">
+      <a href="/admin.html" class="navbar-link">Eventos</a>
+      <a href="/dashboard.html" class="navbar-link">Lista de convidados</a>
+      <a href="/caixa.html" class="navbar-link">Caixa</a>
+      <a href="/gerenciar-rps.html" class="navbar-link ativo">Gerenciar RPs</a>
+      <a href="/conta.html" class="navbar-link">Minha conta</a>
+      <button class="navbar-sair" onclick="sair()">Sair</button>
+    </div>
+  </div>
+</nav>
+
+<div class="pagina">
+  <div class="topo">
+    <h1 class="titulo-fest">👥 Gerenciar RPs</h1>
+    <p>Troque senha, mude o papel ou exclua uma conta, sem precisar de e-mail.</p>
+  </div>
+
+  <div id="listaGerentes"></div>
+</div>
+
+<script>
+let meuId = null;
+
+async function carregar() {
+  const resSessao = await fetch('/api/sessao');
+  if (resSessao.status === 401) return window.location.href = '/login.html';
+  const sessao = await resSessao.json();
+  if (!sessao.logado) return window.location.href = '/login.html';
+
+  const res = await fetch('/api/gerentes');
+  if (res.status === 403) {
+    document.getElementById('listaGerentes').innerHTML = '<div class="vazio" style="color:var(--cinza-400); text-align:center; padding:40px;">Só o administrador acessa essa página.</div>';
+    return;
+  }
+  const gerentes = await res.json();
+  const eu = gerentes.find(g => g.usuario === sessao.usuario);
+  meuId = eu ? eu.id : null;
+
+  const container = document.getElementById('listaGerentes');
+  container.innerHTML = gerentes.map(g => `
+    <div class="rp-card" id="rp-${g.id}">
+      <div class="rp-topo">
+        <div>
+          <span class="rp-nome">${g.usuario}</span>
+          <span class="badge-papel ${g.role}">${g.role === 'admin' ? 'Administrador' : 'RP'}</span>
+          <div class="rp-email">${g.email}</div>
+        </div>
+      </div>
+      <div class="rp-stats">
+        <span>${g.grupos} grupo${g.grupos === 1 ? '' : 's'}</span>
+        <span>${g.inscritos} na lista</span>
+        <span>${g.pagos} pagos</span>
+        <span style="color:var(--ok-fg); font-weight:700;">R$ ${g.total_ganho.toFixed(2)} confirmado</span>
+      </div>
+      <div class="rp-acoes">
+        <button class="btn-secundario" onclick="mostrarFormSenha(${g.id})">Trocar senha</button>
+        ${g.id !== meuId ? `<button class="btn-secundario" onclick="trocarRole(${g.id}, '${g.role === 'admin' ? 'rp' : 'admin'}')">${g.role === 'admin' ? 'Tornar RP' : 'Tornar admin'}</button>` : ''}
+        <button class="btn-excluir" onclick="excluirGerente(${g.id}, '${g.usuario.replace(/'/g, "\\'")}')" ${g.id === meuId ? 'disabled title="Você não pode excluir sua própria conta por aqui"' : ''}>Excluir conta</button>
+      </div>
+      <div class="form-senha oculto" id="formSenha-${g.id}">
+        <input type="password" id="novaSenha-${g.id}" placeholder="Nova senha (mínimo 6 caracteres)">
+        <button onclick="salvarSenha(${g.id})" style="width:auto;">Salvar</button>
+      </div>
+      <div class="msg-rp" id="msg-${g.id}"></div>
+    </div>
+  `).join('');
+}
+
+function mostrarFormSenha(id) {
+  document.getElementById('formSenha-' + id).classList.toggle('oculto');
+}
+
+async function salvarSenha(id) {
+  const novaSenha = document.getElementById('novaSenha-' + id).value;
+  const msg = document.getElementById('msg-' + id);
+  const res = await fetch(`/api/gerentes/${id}/senha`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ novaSenha })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    msg.innerHTML = '<span class="ok" style="padding:6px 10px; border-radius:8px;">✅ Senha trocada</span>';
+    document.getElementById('formSenha-' + id).classList.add('oculto');
+    document.getElementById('novaSenha-' + id).value = '';
+  } else {
+    msg.innerHTML = `<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ ${data.erro}</span>`;
+  }
+}
+
+async function trocarRole(id, novoRole) {
+  const msg = document.getElementById('msg-' + id);
+  const res = await fetch(`/api/gerentes/${id}/role`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: novoRole })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    carregar();
+  } else {
+    msg.innerHTML = `<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ ${data.erro}</span>`;
+  }
+}
+
+async function excluirGerente(id, usuario) {
+  if (!confirm(`Excluir a conta de "${usuario}"? O histórico de grupos e listas dele continua guardado, mas ele não consegue mais logar. Não tem como desfazer.`)) {
+    return;
+  }
+  const res = await fetch(`/api/gerentes/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    carregar();
+  } else {
+    const data = await res.json();
+    const msg = document.getElementById('msg-' + id);
+    if (msg) msg.innerHTML = `<span class="erro" style="padding:6px 10px; border-radius:8px;">❌ ${data.erro}</span>`;
+  }
+}
+
+async function sair() {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+}
+
+carregar();
+</script>
+
+</body>
+</html>

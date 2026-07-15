@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recuperar senha — Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .wrap { width: 100%; max-width: 380px; }
+  .topo { text-align: center; margin-bottom: 22px; }
+  .topo h1 { font-size: 24px; margin: 0 0 4px; }
+  .topo p { color: var(--cinza-400); font-size: 13px; margin: 0; }
+  .rotulo {
+    font-size: 12px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .link-alt {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+  }
+  .link-alt a { color: var(--prata); text-decoration: none; }
+  .link-alt a:hover { color: var(--branco); }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-simples">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+  </div>
+</nav>
+
+<div class="auth-centro">
+<div class="wrap">
+  <div class="topo">
+    <h1 class="titulo-fest">Recuperar senha</h1>
+    <p>Envie o link de redefinição para seu e-mail</p>
+  </div>
+
+  <div class="card">
+    <form onsubmit="return enviar(event)">
+      <span class="rotulo">E-mail cadastrado</span>
+      <input type="email" id="email" placeholder="seu@email.com" autocomplete="email">
+      <button type="submit">Enviar link</button>
+      <div id="msg"></div>
+    </form>
+  </div>
+
+  <div class="link-alt">
+    <a href="/login.html">← Voltar para o login</a>
+  </div>
+</div>
+</div>
+
+<script>
+async function enviar(e) {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const msg = document.getElementById('msg');
+  msg.innerHTML = '';
+
+  const res = await fetch('/api/esqueci-senha', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    msg.innerHTML = `<div class="msg ok">✅ ${data.mensagem}</div>`;
+  } else {
+    msg.innerHTML = `<div class="msg erro">❌ ${data.erro}</div>`;
+  }
+  return false;
+}
+</script>
+
+</body>
+</html>

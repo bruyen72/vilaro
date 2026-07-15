@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minha conta - Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .pagina { padding: 28px; max-width: 480px; margin: 0 auto; }
+  .oculto { display: none; }
+
+  .topo { margin-bottom: 24px; }
+  .topo h1 { font-size: 26px; margin: 0 0 4px; }
+  .topo p { color: var(--cinza-400); font-size: 13px; margin: 0; }
+
+  .card { margin-bottom: 18px; }
+
+  .info-linha {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--cinza-700);
+  }
+  .info-linha:last-child { border-bottom: none; }
+  .info-linha .label {
+    font-size: 12px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .info-linha .valor { font-size: 14px; font-weight: 600; }
+
+  .badge-papel {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: var(--ok-bg);
+    color: var(--ok-fg);
+    border: 1px solid rgba(126,230,172,0.3);
+  }
+
+  .secao-titulo {
+    font-size: 12px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+
+  label {
+    font-size: 12px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+  label:first-of-type { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+    <button class="navbar-toggle" id="navToggle" aria-label="Abrir menu" onclick="this.classList.toggle('aberto'); document.getElementById('navMenu').classList.toggle('aberto')">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="navbar-menu" id="navMenu">
+      <a href="/admin.html" class="navbar-link oculto" id="linkEventos">Eventos</a>
+      <a href="/dashboard.html" class="navbar-link">Lista de convidados</a>
+      <a href="/caixa.html" class="navbar-link">Caixa</a>
+      <a href="/login.html?cadastro=1" class="navbar-link">+ Novo RP</a>
+      <a href="/gerenciar-rps.html" class="navbar-link oculto" id="linkGerenciar">Gerenciar RPs</a>
+      <a href="/conta.html" class="navbar-link ativo">Minha conta</a>
+      <button class="navbar-sair" onclick="sair()">Sair</button>
+    </div>
+  </div>
+</nav>
+
+<div class="pagina">
+  <div class="topo">
+    <h1 class="titulo-fest">✦ Minha conta</h1>
+    <p>Seus dados e sua segurança.</p>
+  </div>
+
+  <div class="card">
+    <div class="secao-titulo">Meus dados</div>
+    <div class="info-linha">
+      <span class="label">Usuário</span>
+      <span class="valor" id="infoUsuario">--</span>
+    </div>
+    <div class="info-linha">
+      <span class="label">E-mail</span>
+      <span class="valor" id="infoEmail">--</span>
+    </div>
+    <div class="info-linha">
+      <span class="label">Papel</span>
+      <span class="badge-papel" id="infoPapel">--</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="secao-titulo">Trocar senha</div>
+    <form id="formSenha" onsubmit="return trocarSenha(event)">
+      <label>Senha atual</label>
+      <input type="password" id="senhaAtual" autocomplete="current-password">
+
+      <label>Nova senha</label>
+      <input type="password" id="novaSenha" placeholder="mínimo 6 caracteres" autocomplete="new-password">
+
+      <button type="submit" style="margin-top:18px;">Salvar nova senha</button>
+      <div id="msgSenha"></div>
+    </form>
+
+    <a class="link-form" href="/esqueci-senha.html" style="font-size:13px; color:var(--prata); display:block; margin-top:14px; text-decoration:none; text-align:center;">Esqueci minha senha atual</a>
+  </div>
+</div>
+
+<script>
+async function carregar() {
+  const res = await fetch('/api/sessao');
+  if (res.status === 401) return window.location.href = '/login.html';
+  const sessao = await res.json();
+  if (!sessao.logado) return window.location.href = '/login.html';
+
+  document.getElementById('infoUsuario').textContent = sessao.usuario;
+  document.getElementById('infoEmail').textContent = sessao.email;
+  document.getElementById('infoPapel').textContent = sessao.role === 'admin' ? 'Administrador' : 'RP';
+
+  if (sessao.role === 'admin') {
+    document.getElementById('linkEventos').classList.remove('oculto');
+    document.getElementById('linkGerenciar').classList.remove('oculto');
+  }
+}
+
+async function trocarSenha(e) {
+  e.preventDefault();
+  const senhaAtual = document.getElementById('senhaAtual').value;
+  const novaSenha = document.getElementById('novaSenha').value;
+  const msg = document.getElementById('msgSenha');
+
+  const res = await fetch('/api/trocar-senha', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ senhaAtual, novaSenha })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    msg.innerHTML = '<div class="msg ok">✅ Senha atualizada</div>';
+    document.getElementById('senhaAtual').value = '';
+    document.getElementById('novaSenha').value = '';
+  } else {
+    msg.innerHTML = `<div class="msg erro">❌ ${data.erro}</div>`;
+  }
+  return false;
+}
+
+async function sair() {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+}
+
+carregar();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista VIP</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .banner {
+    position: relative;
+    width: 100%;
+    height: 46vh;
+    min-height: 280px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--cinza-900);
+    display: flex;
+    align-items: flex-end;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.08), transparent 60%);
+  }
+  .banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, #000 8%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.35) 100%);
+  }
+  .banner-texto {
+    position: relative;
+    z-index: 1;
+    padding: 26px 22px;
+    width: 100%;
+  }
+  .selo {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    color: #0a0a0a;
+    background: linear-gradient(135deg, var(--prata), var(--cinza-300));
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-bottom: 10px;
+  }
+  .banner-texto h1 {
+    margin: 0;
+    font-size: 36px;
+    text-transform: uppercase;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.9);
+    line-height: 1.05;
+  }
+  .banner-texto p {
+    margin: 8px 0 0;
+    color: var(--cinza-300);
+    font-size: 14px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+  }
+
+  .conteudo {
+    max-width: 440px;
+    margin: -28px auto 0;
+    position: relative;
+    z-index: 2;
+    padding: 0 20px 50px;
+    animation: entrarSuave .6s ease both;
+  }
+  @keyframes entrarSuave {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .rp-selo {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--branco);
+    background: linear-gradient(135deg, var(--cinza-800), var(--preto2));
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 100px;
+    padding: 8px 16px;
+    margin: 0 auto 14px;
+    display: table;
+  }
+  .rp-selo::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -60%;
+    width: 40%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.5), transparent);
+    transform: skewX(-20deg);
+    animation: brilhoSelo 2.8s ease-in-out infinite;
+  }
+  @keyframes brilhoSelo {
+    0% { left: -60%; }
+    50% { left: 130%; }
+    100% { left: 130%; }
+  }
+
+  .valor-destaque {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, var(--cinza-800), var(--preto2));
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .valor-destaque .label {
+    font-size: 11px;
+    color: var(--cinza-300);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .valor-destaque .preco {
+    font-size: 26px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--branco), var(--cinza-300));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .vagas {
+    font-size: 13px;
+    color: var(--cinza-300);
+    margin-bottom: 18px;
+    text-align: center;
+    letter-spacing: .3px;
+  }
+  .vagas.lotado { color: var(--erro-fg); }
+
+  .rotulo {
+    font-size: 12px;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .senha-card {
+    text-align: center;
+    padding: 22px 0 6px;
+    animation: entrarSuave .5s ease both;
+  }
+  .senha-card .rotulo { text-align: center; }
+  .senha-selo {
+    display: table;
+    margin: 0 auto 6px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #0a0a0a;
+    background: linear-gradient(135deg, var(--prata), var(--cinza-300));
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+  .senha-numero {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 64px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--branco), var(--cinza-300));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 40px rgba(255,255,255,0.25);
+    animation: flutuar 3s ease-in-out infinite;
+  }
+  .ticket-divisor {
+    position: relative;
+    border-top: 2px dashed rgba(255,255,255,0.16);
+    margin: 20px -26px 16px;
+  }
+  .ticket-divisor::before,
+  .ticket-divisor::after {
+    content: '';
+    position: absolute;
+    top: -11px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--preto);
+  }
+  .ticket-divisor::before { left: -11px; }
+  .ticket-divisor::after { right: -11px; }
+  .senha-aviso {
+    padding: 0 22px;
+    font-size: 13px;
+    color: var(--cinza-300);
+    line-height: 1.5;
+  }
+  .senha-aviso strong { color: var(--branco); }
+
+  .dica-amigos {
+    font-size: 12px;
+    color: var(--cinza-400);
+    margin: -6px 0 12px;
+  }
+  #amigos { resize: vertical; }
+
+  .lista-amigos {
+    text-align: left;
+    margin-top: 16px;
+    padding: 14px 0 0;
+    border-top: 1px dashed rgba(255,255,255,0.16);
+  }
+  .lista-amigos .rotulo { text-align: center; margin-bottom: 10px; }
+  .item-amigo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    color: var(--cinza-300);
+    font-size: 14px;
+  }
+  .item-amigo strong {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--branco);
+    font-size: 16px;
+  }
+
+  .oculto { display: none; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/index.html" class="navbar-logo"><img src="/logo-vilaro.png" alt="Vilaro"></a>
+    <a href="/login.html" class="navbar-link-simples">Área do RP</a>
+  </div>
+</nav>
+
+<div id="modoDetalhe">
+  <div class="banner" id="banner">
+    <div class="banner-texto">
+      <span class="selo">✦ Acesso VIP</span>
+      <h1 class="titulo-fest" id="nomeEvento">Carregando...</h1>
+      <p id="descEvento"></p>
+    </div>
+  </div>
+
+  <div class="conteudo">
+    <div class="rp-selo" id="rpSelo"></div>
+    <div class="card">
+      <div class="valor-destaque">
+        <span class="label">Entrada</span>
+        <span class="preco" id="precoEvento">--</span>
+      </div>
+
+      <div class="vagas" id="vagasInfo"></div>
+
+      <span class="rotulo">Nome completo</span>
+      <input type="text" id="nome" placeholder="Digite seu nome" name="name" autocomplete="name">
+
+      <span class="rotulo">WhatsApp</span>
+      <input type="tel" id="whatsapp" placeholder="(DDD) 00000-0000" name="tel" autocomplete="tel" inputmode="numeric">
+
+      <span class="rotulo">E-mail</span>
+      <input type="email" id="email" placeholder="seu@email.com" name="email" autocomplete="email">
+
+      <span class="rotulo">Vai levar amigos? (opcional)</span>
+      <textarea id="amigos" placeholder="Um nome por linha, ex:&#10;João Silva&#10;Maria Souza" rows="3"></textarea>
+      <div class="dica-amigos">Cada amigo entra na lista com um número próprio, usando seu whatsapp e e-mail.</div>
+
+      <button id="btnEnviar" onclick="enviar()">Entrar na lista</button>
+
+      <div id="resultado"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const slug = params.get('slug');
+let rpNome = '';
+
+async function carregar() {
+  if (!slug) {
+    document.getElementById('nomeEvento').textContent = 'Link inválido';
+    document.getElementById('descEvento').textContent = 'Peça um link novo pro seu RP.';
+    document.querySelector('.card').innerHTML = '';
+    return;
+  }
+
+  const res = await fetch('/api/grupo/' + slug);
+  const g = await res.json();
+
+  if (!res.ok) {
+    document.getElementById('nomeEvento').textContent = g.erro || 'Link inválido';
+    document.querySelector('.card').innerHTML = '';
+    return;
+  }
+
+  rpNome = g.rp_nome;
+
+  document.getElementById('nomeEvento').textContent = g.nome;
+  document.getElementById('descEvento').textContent = g.descricao || '';
+  document.getElementById('precoEvento').textContent = 'R$ ' + g.valor.toFixed(2);
+  document.getElementById('rpSelo').textContent = `Lista do RP ${g.rp_nome}`;
+
+  if (g.banner_url) {
+    document.getElementById('banner').style.backgroundImage = `url(${g.banner_url})`;
+  }
+
+  const info = document.getElementById('vagasInfo');
+  info.textContent = `${g.inscritos} já confirmados na lista`;
+}
+
+async function enviar() {
+  const nome_completo = document.getElementById('nome').value.trim();
+  const whatsapp = document.getElementById('whatsapp').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const amigos = document.getElementById('amigos').value
+    .split('\n')
+    .map(n => n.trim())
+    .filter(Boolean);
+  const resultado = document.getElementById('resultado');
+  const btn = document.getElementById('btnEnviar');
+
+  const faltando = [];
+  if (!nome_completo) faltando.push('nome completo');
+  if (!whatsapp) faltando.push('whatsapp');
+  if (!email) faltando.push('e-mail');
+
+  if (faltando.length) {
+    resultado.innerHTML = `<div class="msg erro">Falta preencher: ${faltando.join(', ')}</div>`;
+    return;
+  }
+
+  if (btn.disabled) return;
+  btn.disabled = true;
+
+  const res = await fetch('/api/inscricao-grupo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slug, nome_completo, whatsapp, email, amigos })
+  });
+  const data = await res.json();
+
+  if (res.ok) {
+    mostrarSenha(data.numero, data.ja_estava, data.amigos, data.ja_estavam);
+  } else if (data.numero) {
+    mostrarSenha(data.numero, true, data.amigos, data.ja_estavam);
+  } else {
+    resultado.innerHTML = `<div class="msg erro">❌ ${data.erro}</div>`;
+    btn.disabled = false;
+  }
+}
+
+function mostrarSenha(numero, jaInscrito, amigos, jaEstavam) {
+  const card = document.querySelector('.card');
+  const numeroFmt = String(numero).padStart(3, '0');
+
+  const outrosNomes = [...(amigos || []), ...(jaEstavam || [])].filter(p => Number(p.numero) !== Number(numero));
+  const listaAmigosHtml = outrosNomes.length ? `
+    <div class="lista-amigos">
+      <span class="rotulo">${outrosNomes.length === 1 ? 'Seu amigo também entrou' : 'Seus amigos também entraram'}</span>
+      ${outrosNomes.map(p => `
+        <div class="item-amigo">
+          <span>${p.nome_completo}</span>
+          <strong>${String(p.numero).padStart(3, '0')}</strong>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
+  card.innerHTML = `
+    <div class="senha-card">
+      <span class="senha-selo">✦ Acesso confirmado</span>
+      <span class="rotulo">${jaInscrito ? 'Você já está na lista' : 'Você entrou na lista'}</span>
+      <div class="senha-numero">${numeroFmt}</div>
+      <div class="ticket-divisor"></div>
+      <div class="senha-aviso">Guarde esse número e o nome do RP. Na entrada, <strong>fale o nome "${rpNome}" e o número ${numeroFmt}</strong> para o segurança confirmar sua vaga. Também mandamos esse número pro seu e-mail.</div>
+      ${listaAmigosHtml}
+      <a href="/meu-numero.html" style="display:block; text-align:center; margin-top:14px; font-size:13px; color:var(--prata); text-decoration:none;">Esqueceu o número? Clique aqui pra consultar de novo</a>
+    </div>
+  `;
+}
+
+carregar();
+</script>
+
+</body>
+</html>
