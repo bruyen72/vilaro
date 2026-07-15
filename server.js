@@ -215,6 +215,33 @@ function garantirRolesGerentes() {
 }
 garantirRolesGerentes();
 
+// Garante que sempre existe uma conta admin fixa (usuário/senha vêm do .env, nunca do código).
+// Em hospedagens com disco temporário, o banco pode ser resetado a cada reinício/deploy —
+// sem isso, o app achava que "ninguém tem conta ainda" e mostrava a tela de cadastro em vez
+// da tela de login, e o dono do sistema podia ficar sem acesso de admin.
+function garantirAdminPadrao() {
+  const usuarioPadrao = process.env.ADMIN_PADRAO_USUARIO;
+  const senhaPadrao = process.env.ADMIN_PADRAO_SENHA;
+  if (!usuarioPadrao || !senhaPadrao) return;
+
+  const data = carregar();
+  const jaTemAdminPadrao = data.gerentes.some(g => g.usuario.toLowerCase() === usuarioPadrao.toLowerCase());
+  if (!jaTemAdminPadrao) {
+    data.gerentes.push({
+      id: data.proximoIdGerente,
+      usuario: usuarioPadrao,
+      email: `${usuarioPadrao}@vilaro.local`,
+      senhaHash: hashSenha(senhaPadrao),
+      role: 'admin',
+      resetToken: null,
+      resetExpira: null
+    });
+    data.proximoIdGerente++;
+    salvar(data);
+  }
+}
+garantirAdminPadrao();
+
 // ---------- CRIAR EVENTO ----------
 app.post('/api/eventos', exigirLogin, (req, res) => {
   const { nome, valor, data_inicio, data_fim, banner_url, descricao } = req.body;
