@@ -11,6 +11,7 @@ const { carregar, salvar } = require('./db');
 const { hashSenha, compararSenha, gerarToken, enviarEmailRecuperacao, enviarEmailConfirmacaoLista, enviarEmailConfirmacaoListaMultipla, exigirLogin, exigirAdmin } = require('./auth');
 
 const app = express();
+app.set('trust proxy', 1); // Render fica atrás de proxy; sem isso, req.ip seria sempre o do proxy, não do visitante
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(session({
@@ -964,10 +965,27 @@ app.post('/api/registrar-gerente', (req, res) => {
 });
 
 // ---------- LOGIN ----------
+// Trava por IP depois de várias tentativas erradas seguidas, pra dificultar invasão por
+// tentativa e erro (força bruta) na senha de admin/RP.
+const tentativasLogin = new Map(); // ip -> { count, desde }
+const JANELA_BLOQUEIO_LOGIN_MS = 15 * 60 * 1000; // 15 minutos
+const MAX_TENTATIVAS_LOGIN = 5;
+
 app.post('/api/login', (req, res) => {
   const { usuario, senha } = req.body;
   if (!usuario || !senha) {
     return res.status(400).json({ erro: 'Preencha usuário e senha' });
+  }
+
+  const ip = req.ip;
+  const agora = Date.now();
+  const tentativa = tentativasLogin.get(ip);
+  const bloqueado = tentativa &&
+    (agora - tentativa.desde) < JANELA_BLOQUEIO_LOGIN_MS &&
+    tentativa.count >= MAX_TENTATIVAS_LOGIN;
+
+  if (bloqueado) {
+    return res.status(429).json({ erro: 'Muitas tentativas erradas. Espere alguns minutos e tente de novo.' });
   }
 
   const data = carregar();
@@ -975,9 +993,15 @@ app.post('/api/login', (req, res) => {
     g.usuario.toLowerCase() === usuario.toLowerCase() || g.email.toLowerCase() === usuario.toLowerCase()
   );
   if (!gerente || !compararSenha(senha, gerente.senhaHash)) {
+    if (!tentativa || (agora - tentativa.desde) >= JANELA_BLOQUEIO_LOGIN_MS) {
+      tentativasLogin.set(ip, { count: 1, desde: agora });
+    } else {
+      tentativa.count++;
+    }
     return res.status(401).json({ erro: 'Usuário ou senha incorretos' });
   }
 
+  tentativasLogin.delete(ip);
   req.session.gerenteId = gerente.id;
   res.json({ ok: true, usuario: gerente.usuario, role: gerente.role });
 });
