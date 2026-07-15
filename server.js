@@ -34,8 +34,13 @@ app.use(express.static('public'));
 const PORT = process.env.PORT || 3000;
 
 // ---------- CONFIG DE UPLOAD DE IMAGEM (banner) ----------
+// Garante que a pasta existe: como ela é vazia, o Git não versiona ela sozinha
+// (então não existe ainda logo depois de um clone/deploy novo, ex: no Render)
+const PASTA_UPLOADS = path.join(__dirname, 'public/uploads');
+require('fs').mkdirSync(PASTA_UPLOADS, { recursive: true });
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'public/uploads'),
+  destination: (req, file, cb) => cb(null, PASTA_UPLOADS),
   filename: (req, file, cb) => {
     const nomeUnico = Date.now() + path.extname(file.originalname);
     cb(null, nomeUnico);
